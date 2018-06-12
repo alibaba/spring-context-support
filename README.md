@@ -2,8 +2,6 @@
 
 =====================
 
-基于 Spring Framework 3.2.x 版本对 Spring Context 扩展
-
 Current project that extends `spring-context` is based on Spring Framework 3.2.x +
 
 
@@ -17,7 +15,7 @@ Current project that extends `spring-context` is based on Spring Framework 3.2.x
     <dependency>
         <groupId>com.alibaba.spring</groupId>
         <artifactId>spring-context-support</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.0.1</version>
     </dependency>
 
     ......
