@@ -6,6 +6,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.lang.annotation.Annotation;
@@ -49,7 +50,7 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
     }
 
     /**
-     * Scan base packages for register {@link @Component}s
+     * Scan base packages for register {@link Component @Component}s
      *
      * @param registry     {@link BeanDefinitionRegistry}
      * @param basePackages base packages

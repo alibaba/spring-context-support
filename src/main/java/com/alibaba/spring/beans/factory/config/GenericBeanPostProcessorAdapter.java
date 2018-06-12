@@ -53,6 +53,9 @@ public abstract class GenericBeanPostProcessorAdapter<T> implements BeanPostProc
      * Adapter BeanPostProcessor#postProcessBeforeInitialization(Object, String) method , sub-type
      * could override this method.
      *
+     * @param bean     Bean Object
+     * @param beanName Bean Name
+     * @return Bean Object
      * @see BeanPostProcessor#postProcessBeforeInitialization(Object, String)
      */
     protected T doPostProcessBeforeInitialization(T bean, String beanName) throws BeansException {
@@ -67,6 +70,9 @@ public abstract class GenericBeanPostProcessorAdapter<T> implements BeanPostProc
      * Adapter BeanPostProcessor#postProcessAfterInitialization(Object, String) method , sub-type
      * could override this method.
      *
+     * @param bean     Bean Object
+     * @param beanName Bean Name
+     * @return Bean Object
      * @see BeanPostProcessor#postProcessAfterInitialization(Object, String)
      */
     protected T doPostProcessAfterInitialization(T bean, String beanName) throws BeansException {
@@ -82,9 +88,9 @@ public abstract class GenericBeanPostProcessorAdapter<T> implements BeanPostProc
      * <p>
      * This method will be invoked by BeanPostProcessor#postProcessBeforeInitialization(Object, String)
      *
-     * @param bean
-     * @param beanName
-     * @throws BeansException
+     * @param bean     Bean Object
+     * @param beanName Bean Name
+     * @throws BeansException  in case of errors
      */
     protected void processBeforeInitialization(T bean, String beanName) throws BeansException {
     }
@@ -94,9 +100,9 @@ public abstract class GenericBeanPostProcessorAdapter<T> implements BeanPostProc
      * <p>
      * This method will be invoked by BeanPostProcessor#postProcessAfterInitialization(Object, String)
      *
-     * @param bean
-     * @param beanName
-     * @throws BeansException
+     * @param bean     Bean Object
+     * @param beanName Bean Name
+     * @throws BeansException  in case of errors
      */
     protected void processAfterInitialization(T bean, String beanName) throws BeansException {
     }

@@ -22,7 +22,7 @@ public abstract class PropertySourcesUtils {
      *
      * @param propertySources {@link PropertySource} Iterable
      * @param prefix          the prefix of property name
-     * @return Map<String , Object>
+     * @return Map
      * @see Properties
      */
     public static Map<String, Object> getSubProperties(Iterable<PropertySource<?>> propertySources, String prefix) {
