@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd"
+       default-autowire="byName">
+
+
+    <bean id="user" class="com.alibaba.spring.util.UserFactoryBean">
+        <property name="name">
+            <value>Mercy</value>
+        </property>
+        <property name="age">
+            <value>30</value>
+        </property>
+    </bean>
+
+</beans>

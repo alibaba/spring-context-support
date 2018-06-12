@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!DOCTYPE log4j:configuration SYSTEM "http://jakarta.apache.org/log4j/log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+    <appender name="DEFAULT-APPENDER" class="org.apache.log4j.ConsoleAppender">
+        <param name="encoding" value="UTF-8"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%5p %c{2} - %m%n"/>
+        </layout>
+    </appender>
+
+    <root>
+        <level value="DEBUG"/>
+        <appender-ref ref="DEFAULT-APPENDER"/>
+    </root>
+</log4j:configuration>
