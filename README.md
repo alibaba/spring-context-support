@@ -31,6 +31,19 @@ Current project that extends `spring-context` is based on Spring Framework 3.2.x
 </dependencies>
 ````
 
+If your project failed to resolve the dependency, try to add the following repository:
+```xml
+    <repositories>
+        <repository>
+            <id>sonatype-nexus</id>
+            <url>https://oss.sonatype.org/content/repositories/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+```
+
 
 ## Document
 
