@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.alibaba.spring</groupId>
-    <artifactId>spring-context-extras</artifactId>
+    <artifactId>spring-context-support</artifactId>
     <version>1.0.0.RELEASE</version>
 
     <properties>
@@ -21,9 +21,9 @@
     </properties>
 
     <scm>
-        <connection>git@github.com:alibaba/spring-context-extras.git</connection>
-        <developerConnection>git@github.com:alibaba/spring-context-extras.git</developerConnection>
-        <url>https://github.com/alibaba/spring-context-extras</url>
+        <connection>git@github.com:alibaba/spring-context-support.git</connection>
+        <developerConnection>git@github.com:alibaba/spring-context-support.git</developerConnection>
+        <url>https://github.com/alibaba/spring-context-support</url>
     </scm>
 
     <developers>
