@@ -132,9 +132,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      * @param beanClass The {@link Class} of Bean
      * @return non-null {@link List}
      */
-    private List<AnnotatedFieldInjectedElement> findFieldAnnotationMetadata(final Class<?> beanClass) {
+    private List<AnnotatedFieldElement> findFieldAnnotationMetadata(final Class<?> beanClass) {
 
-        final List<AnnotatedFieldInjectedElement> elements = new LinkedList<AnnotatedFieldInjectedElement>();
+        final List<AnnotatedFieldElement> elements = new LinkedList<AnnotatedFieldElement>();
 
         ReflectionUtils.doWithFields(beanClass, new ReflectionUtils.FieldCallback() {
             @Override
@@ -151,7 +151,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
                         return;
                     }
 
-                    elements.add(new AnnotatedFieldInjectedElement(field, annotation));
+                    elements.add(new AnnotatedFieldElement(field, annotation));
                 }
 
             }
@@ -167,9 +167,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      * @param beanClass The {@link Class} of Bean
      * @return non-null {@link List}
      */
-    private List<AnnotatedMethodInjectedElement> findAnnotatedMethodMetadata(final Class<?> beanClass) {
+    private List<AnnotatedMethodElement> findAnnotatedMethodMetadata(final Class<?> beanClass) {
 
-        final List<AnnotatedMethodInjectedElement> elements = new LinkedList<AnnotatedMethodInjectedElement>();
+        final List<AnnotatedMethodElement> elements = new LinkedList<AnnotatedMethodElement>();
 
         ReflectionUtils.doWithMethods(beanClass, new ReflectionUtils.MethodCallback() {
             @Override
@@ -197,7 +197,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
                         }
                     }
                     PropertyDescriptor pd = BeanUtils.findPropertyForMethod(bridgedMethod, beanClass);
-                    elements.add(new AnnotatedMethodInjectedElement(method, pd, annotation));
+                    elements.add(new AnnotatedMethodElement(method, pd, annotation));
                 }
             }
         });
@@ -208,8 +208,8 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
 
     private AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
-        Collection<AnnotatedFieldInjectedElement> fieldElements = findFieldAnnotationMetadata(beanClass);
-        Collection<AnnotatedMethodInjectedElement> methodElements = findAnnotatedMethodMetadata(beanClass);
+        Collection<AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(beanClass);
+        Collection<AnnotatedMethodElement> methodElements = findAnnotatedMethodMetadata(beanClass);
         return new AnnotatedInjectionMetadata(beanClass, fieldElements, methodElements);
 
     }
@@ -311,25 +311,24 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
     /**
      * Get injected-object from specified {@link A annotation} and Bean Class
      *
-     * @param annotation     {@link A annotation}
-     * @param bean           Current bean that will be injected
-     * @param beanName       Current bean name that will be injected
-     * @param propertyValues {@link PropertyValues}
-     * @param injectedType   the type of injected-object
+     * @param annotation      {@link A annotation}
+     * @param bean            Current bean that will be injected
+     * @param beanName        Current bean name that will be injected
+     * @param injectedType    the type of injected-object
+     * @param injectedElement {@link InjectionMetadata.InjectedElement}
      * @return An injected object
      * @throws Exception If getting is failed
      */
-    protected Object getInjectedObject(A annotation, Object bean, String beanName, PropertyValues propertyValues,
-                                       Class<?> injectedType) throws Exception {
+    protected Object getInjectedObject(A annotation, Object bean, String beanName, Class<?> injectedType,
+                                       InjectionMetadata.InjectedElement injectedElement) throws Exception {
 
-        String cacheKey = buildInjectedObjectCacheKey(annotation, bean, beanName, propertyValues, injectedType);
+        String cacheKey = buildInjectedObjectCacheKey(annotation, bean, beanName, injectedType);
 
         Object injectedObject = injectedObjectsCache.get(cacheKey);
 
         if (injectedObject == null) {
-            injectedObject = doGetInjectedBean(annotation, bean, beanName, propertyValues, injectedType);
+            injectedObject = doGetInjectedBean(annotation, bean, beanName, injectedType, injectedElement);
             // Customized inject-object if necessary
-            injectedObject = customizeInjectedObject(injectedObject, annotation, bean, beanName, propertyValues, injectedType);
             injectedObjectsCache.putIfAbsent(cacheKey, injectedObject);
         }
 
@@ -346,16 +345,16 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      * <li>{@link #getEnvironment() Environment}</li>
      * </ul>
      *
-     * @param annotation     {@link A annotation}
-     * @param bean           Current bean that will be injected
-     * @param beanName       Current bean name that will be injected
-     * @param propertyValues {@link PropertyValues}
-     * @param injectedType   the type of injected-object
+     * @param annotation      {@link A annotation}
+     * @param bean            Current bean that will be injected
+     * @param beanName        Current bean name that will be injected
+     * @param injectedType    the type of injected-object
+     * @param injectedElement {@link InjectionMetadata.InjectedElement}
      * @return The injected object
      * @throws Exception If resolving an injected object is failed.
      */
-    protected abstract Object doGetInjectedBean(A annotation, Object bean, String beanName,
-                                                PropertyValues propertyValues, Class<?> injectedType) throws Exception;
+    protected abstract Object doGetInjectedBean(A annotation, Object bean, String beanName, Class<?> injectedType,
+                                                InjectionMetadata.InjectedElement injectedElement) throws Exception;
 
     /**
      * Build a cache key for injected-object. The context objects could help this method if
@@ -366,15 +365,14 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      * <li>{@link #getEnvironment() Environment}</li>
      * </ul>
      *
-     * @param annotation     {@link A annotation}
-     * @param bean           Current bean that will be injected
-     * @param beanName       Current bean name that will be injected
-     * @param propertyValues {@link PropertyValues}
-     * @param injectedType   the type of injected-object
+     * @param annotation   {@link A annotation}
+     * @param bean         Current bean that will be injected
+     * @param beanName     Current bean name that will be injected
+     * @param injectedType the type of injected-object
      * @return Bean cache key
      */
     protected abstract String buildInjectedObjectCacheKey(A annotation, Object bean, String beanName,
-                                                          PropertyValues propertyValues, Class<?> injectedType);
+                                                          Class<?> injectedType);
 
     /**
      * Get {@link Map} in injected field.
@@ -388,9 +386,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
         for (AnnotatedInjectionMetadata metadata : injectionMetadataCache.values()) {
 
-            Collection<AnnotatedFieldInjectedElement> fieldElements = metadata.getFieldElements();
+            Collection<AnnotatedFieldElement> fieldElements = metadata.getFieldElements();
 
-            for (AnnotatedFieldInjectedElement fieldElement : fieldElements) {
+            for (AnnotatedFieldElement fieldElement : fieldElements) {
 
                 injectedElementBeanMap.put(fieldElement, fieldElement.bean);
 
@@ -414,9 +412,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
         for (AnnotatedInjectionMetadata metadata : injectionMetadataCache.values()) {
 
-            Collection<AnnotatedMethodInjectedElement> methodElements = metadata.getMethodElements();
+            Collection<AnnotatedMethodElement> methodElements = metadata.getMethodElements();
 
-            for (AnnotatedMethodInjectedElement methodElement : methodElements) {
+            for (AnnotatedMethodElement methodElement : methodElements) {
 
                 injectedElementBeanMap.put(methodElement, methodElement.object);
 
@@ -433,22 +431,22 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      */
     private class AnnotatedInjectionMetadata extends InjectionMetadata {
 
-        private final Collection<AnnotatedFieldInjectedElement> fieldElements;
+        private final Collection<AnnotatedFieldElement> fieldElements;
 
-        private final Collection<AnnotatedMethodInjectedElement> methodElements;
+        private final Collection<AnnotatedMethodElement> methodElements;
 
-        public AnnotatedInjectionMetadata(Class<?> targetClass, Collection<AnnotatedFieldInjectedElement> fieldElements,
-                                          Collection<AnnotatedMethodInjectedElement> methodElements) {
+        public AnnotatedInjectionMetadata(Class<?> targetClass, Collection<AnnotatedFieldElement> fieldElements,
+                                          Collection<AnnotatedMethodElement> methodElements) {
             super(targetClass, combine(fieldElements, methodElements));
             this.fieldElements = fieldElements;
             this.methodElements = methodElements;
         }
 
-        public Collection<AnnotatedFieldInjectedElement> getFieldElements() {
+        public Collection<AnnotatedFieldElement> getFieldElements() {
             return fieldElements;
         }
 
-        public Collection<AnnotatedMethodInjectedElement> getMethodElements() {
+        public Collection<AnnotatedMethodElement> getMethodElements() {
             return methodElements;
         }
     }
@@ -456,7 +454,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
     /**
      * {@link A} {@link Method} {@link InjectionMetadata.InjectedElement}
      */
-    private class AnnotatedMethodInjectedElement extends InjectionMetadata.InjectedElement {
+    private class AnnotatedMethodElement extends InjectionMetadata.InjectedElement {
 
         private final Method method;
 
@@ -464,7 +462,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
         private volatile Object object;
 
-        protected AnnotatedMethodInjectedElement(Method method, PropertyDescriptor pd, A annotation) {
+        protected AnnotatedMethodElement(Method method, PropertyDescriptor pd, A annotation) {
             super(method, pd);
             this.method = method;
             this.annotation = annotation;
@@ -475,9 +473,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
             Class<?> injectedType = pd.getPropertyType();
 
-            ReflectionUtils.makeAccessible(method);
+            Object injectedObject = getInjectedObject(annotation, bean, beanName, injectedType, this);
 
-            Object injectedObject = getInjectedObject(annotation, bean, beanName, pvs, injectedType);
+            ReflectionUtils.makeAccessible(method);
 
             method.invoke(bean, injectedObject);
 
@@ -486,26 +484,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
     }
 
     /**
-     * Subclass can override this method to customize injected-object
-     *
-     * @param injectedObject Injected object from {@link #getInjectedObject(Annotation, Object, String, PropertyValues, Class)}
-     * @param annotation     {@link A annotation}
-     * @param bean           Current bean that will be injected
-     * @param beanName       Current bean name that will be injected
-     * @param propertyValues {@link PropertyValues}
-     * @param injectedType   the type of injected-object
-     * @return An injected-object after customization
-     */
-    protected Object customizeInjectedObject(Object injectedObject, A annotation, Object bean, String beanName,
-                                             PropertyValues propertyValues,
-                                             Class<?> injectedType) {
-        return injectedObject;
-    }
-
-    /**
      * {@link A} {@link Field} {@link InjectionMetadata.InjectedElement}
      */
-    private class AnnotatedFieldInjectedElement extends InjectionMetadata.InjectedElement {
+    public class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
 
         private final Field field;
 
@@ -513,7 +494,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
         private volatile Object bean;
 
-        protected AnnotatedFieldInjectedElement(Field field, A annotation) {
+        protected AnnotatedFieldElement(Field field, A annotation) {
             super(field, null);
             this.field = field;
             this.annotation = annotation;
@@ -524,9 +505,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
             Class<?> injectedType = field.getType();
 
-            ReflectionUtils.makeAccessible(field);
+            Object injectedObject = getInjectedObject(annotation, bean, beanName, injectedType, this);
 
-            Object injectedObject = getInjectedObject(annotation, bean, beanName, pvs, injectedType);
+            ReflectionUtils.makeAccessible(field);
 
             field.set(bean, injectedObject);
 
