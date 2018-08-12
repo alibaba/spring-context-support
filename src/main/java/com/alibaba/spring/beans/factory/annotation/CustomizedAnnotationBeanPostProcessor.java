@@ -23,7 +23,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
@@ -54,16 +53,17 @@ import static org.springframework.core.annotation.AnnotationUtils.findAnnotation
 import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
 
 /**
- * Abstract Generic {@link BeanPostProcessor} for injecting annotated type instance
+ * Abstract generic {@link BeanPostProcessor} implementation for customized annotation that annotated injected-object.
  *
- * @param <A> The type of {@link Annotation}
- * @param <B> The type of injected-bean
+ * @param <A> The type of {@link Annotation customized annotation}
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.1
  */
-public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, B> extends
+public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation> extends
         InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
         BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
+
+    private final static int CACHE_SIZE = Integer.getInteger("", 32);
 
     private final Log logger = LogFactory.getLog(getClass());
 
@@ -72,7 +72,7 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
     private final ConcurrentMap<String, AnnotatedInjectionMetadata> injectionMetadataCache =
             new ConcurrentHashMap<String, AnnotatedInjectionMetadata>(32);
 
-    private final ConcurrentMap<String, B> beanCaches = new ConcurrentHashMap<String, B>();
+    private final ConcurrentMap<String, Object> injectedObjectsCache = new ConcurrentHashMap<String, Object>(32);
 
     private ConfigurableListableBeanFactory beanFactory;
 
@@ -82,7 +82,7 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
 
     private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public AnnotationInjectedBeanPostProcessor() {
+    public CustomizedAnnotationBeanPostProcessor() {
         this.annotationType = resolveGenericType(getClass());
     }
 
@@ -103,13 +103,9 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
         return annotationType;
     }
 
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
-    }
-
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         Assert.isInstanceOf(ConfigurableListableBeanFactory.class, beanFactory,
-                "AnnotationInjectedBeanPostProcessor requires a ConfigurableListableBeanFactory");
+                "CustomizedAnnotationBeanPostProcessor requires a ConfigurableListableBeanFactory");
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 
@@ -123,7 +119,8 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
         } catch (BeanCreationException ex) {
             throw ex;
         } catch (Throwable ex) {
-            throw new BeanCreationException(beanName, "Injection of @A dependencies failed", ex);
+            throw new BeanCreationException(beanName, "Injection of @" + getAnnotationType().getName()
+                    + " dependencies is failed", ex);
         }
         return pvs;
     }
@@ -135,9 +132,9 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
      * @param beanClass The {@link Class} of Bean
      * @return non-null {@link List}
      */
-    private List<AnnotatedFieldElement> findFieldAnnotationMetadata(final Class<?> beanClass) {
+    private List<AnnotatedFieldInjectedElement> findFieldAnnotationMetadata(final Class<?> beanClass) {
 
-        final List<AnnotatedFieldElement> elements = new LinkedList<AnnotatedFieldElement>();
+        final List<AnnotatedFieldInjectedElement> elements = new LinkedList<AnnotatedFieldInjectedElement>();
 
         ReflectionUtils.doWithFields(beanClass, new ReflectionUtils.FieldCallback() {
             @Override
@@ -149,12 +146,12 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
 
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (logger.isWarnEnabled()) {
-                            logger.warn("@A annotation is not supported on static fields: " + field);
+                            logger.warn("@" + getAnnotationType().getName() + " is not supported on static fields: " + field);
                         }
                         return;
                     }
 
-                    elements.add(new AnnotatedFieldElement(field, annotation));
+                    elements.add(new AnnotatedFieldInjectedElement(field, annotation));
                 }
 
             }
@@ -170,9 +167,9 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
      * @param beanClass The {@link Class} of Bean
      * @return non-null {@link List}
      */
-    private List<AnnotatedMethodElement> findAnnotatedMethodMetadata(final Class<?> beanClass) {
+    private List<AnnotatedMethodInjectedElement> findAnnotatedMethodMetadata(final Class<?> beanClass) {
 
-        final List<AnnotatedMethodElement> elements = new LinkedList<AnnotatedMethodElement>();
+        final List<AnnotatedMethodInjectedElement> elements = new LinkedList<AnnotatedMethodInjectedElement>();
 
         ReflectionUtils.doWithMethods(beanClass, new ReflectionUtils.MethodCallback() {
             @Override
@@ -200,7 +197,7 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
                         }
                     }
                     PropertyDescriptor pd = BeanUtils.findPropertyForMethod(bridgedMethod, beanClass);
-                    elements.add(new AnnotatedMethodElement(method, pd, annotation));
+                    elements.add(new AnnotatedMethodInjectedElement(method, pd, annotation));
                 }
             }
         });
@@ -211,8 +208,8 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
 
 
     private AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
-        Collection<AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(beanClass);
-        Collection<AnnotatedMethodElement> methodElements = findAnnotatedMethodMetadata(beanClass);
+        Collection<AnnotatedFieldInjectedElement> fieldElements = findFieldAnnotationMetadata(beanClass);
+        Collection<AnnotatedMethodInjectedElement> methodElements = findAnnotatedMethodMetadata(beanClass);
         return new AnnotatedInjectionMetadata(beanClass, fieldElements, methodElements);
 
     }
@@ -233,7 +230,7 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
                         metadata = buildAnnotatedMetadata(clazz);
                         this.injectionMetadataCache.put(cacheKey, metadata);
                     } catch (NoClassDefFoundError err) {
-                        throw new IllegalStateException("Failed to introspect bean class [" + clazz.getName() +
+                        throw new IllegalStateException("Failed to introspect object class [" + clazz.getName() +
                                 "] for annotation metadata: could not find class that it depends on", err);
                     }
                 }
@@ -262,18 +259,18 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
     @Override
     public void destroy() throws Exception {
 
-        for (B bean : beanCaches.values()) {
+        for (Object object : injectedObjectsCache.values()) {
             if (logger.isInfoEnabled()) {
-                logger.info(bean + " was destroying!");
+                logger.info(object + " was destroying!");
             }
 
-            if (bean instanceof DisposableBean) {
-                ((DisposableBean) bean).destroy();
+            if (object instanceof DisposableBean) {
+                ((DisposableBean) object).destroy();
             }
         }
 
         injectionMetadataCache.clear();
-        beanCaches.clear();
+        injectedObjectsCache.clear();
 
         if (logger.isInfoEnabled()) {
             logger.info(getClass() + " was destroying!");
@@ -290,94 +287,110 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
         this.environment = environment;
     }
 
-    public Environment getEnvironment() {
+    protected Environment getEnvironment() {
         return environment;
     }
 
-    public ClassLoader getClassLoader() {
+    protected ClassLoader getClassLoader() {
         return classLoader;
     }
 
-    public ConfigurableListableBeanFactory getBeanFactory() {
+    protected ConfigurableListableBeanFactory getBeanFactory() {
         return beanFactory;
     }
 
     /**
-     * Gets all beans of {@link B}
+     * Gets all injected-objects.
      *
      * @return non-null {@link Collection}
      */
-    public Collection<B> getBeans() {
-        return this.beanCaches.values();
+    protected Collection<Object> getInjectedObjects() {
+        return this.injectedObjectsCache.values();
     }
 
     /**
-     * Get injected-bean from specified {@link A annotation} and Bean Class
+     * Get injected-object from specified {@link A annotation} and Bean Class
      *
-     * @param annotation {@link A annotation}
-     * @param beanClass  Bean Class
-     * @return The injected bean
-     * @throws Exception
+     * @param annotation     {@link A annotation}
+     * @param bean           Current bean that will be injected
+     * @param beanName       Current bean name that will be injected
+     * @param propertyValues {@link PropertyValues}
+     * @param injectedType   the type of injected-object
+     * @return An injected object
+     * @throws Exception If getting is failed
      */
-    B getInjectedBean(A annotation, Class<B> beanClass) throws Exception {
+    protected Object getInjectedObject(A annotation, Object bean, String beanName, PropertyValues propertyValues,
+                                       Class<?> injectedType) throws Exception {
 
-        String cacheKey = generateInjectedBeanCacheKey(annotation, beanClass, beanFactory, environment, classLoader);
+        String cacheKey = buildInjectedObjectCacheKey(annotation, bean, beanName, propertyValues, injectedType);
 
-        B bean = beanCaches.get(cacheKey);
+        Object injectedObject = injectedObjectsCache.get(cacheKey);
 
-        if (bean == null) {
-            bean = resolveInjectedBean(annotation, beanClass, beanFactory, environment, classLoader);
-            beanCaches.putIfAbsent(cacheKey, bean);
+        if (injectedObject == null) {
+            injectedObject = doGetInjectedBean(annotation, bean, beanName, propertyValues, injectedType);
+            // Customized inject-object if necessary
+            injectedObject = customizeInjectedObject(injectedObject, annotation, bean, beanName, propertyValues, injectedType);
+            injectedObjectsCache.putIfAbsent(cacheKey, injectedObject);
         }
 
-        return bean;
+        return injectedObject;
 
     }
 
     /**
-     * Resolve injected-bean from specified {@link A annotation} and Bean Class
+     * Subclass must implement this method to get injected-object. The context objects could help this method if
+     * necessary :
+     * <ul>
+     * <li>{@link #getBeanFactory() BeanFactory}</li>
+     * <li>{@link #getClassLoader() ClassLoader}</li>
+     * <li>{@link #getEnvironment() Environment}</li>
+     * </ul>
      *
-     * @param annotation  {@link A annotation}
-     * @param beanClass   Bean Class
-     * @param beanFactory {@link ConfigurableListableBeanFactory}
-     * @param environment {@link Environment}
-     * @param classLoader {@link ClassLoader}
-     * @return The injected bean
-     * @throws Exception If resolving an injected bean is failed.
+     * @param annotation     {@link A annotation}
+     * @param bean           Current bean that will be injected
+     * @param beanName       Current bean name that will be injected
+     * @param propertyValues {@link PropertyValues}
+     * @param injectedType   the type of injected-object
+     * @return The injected object
+     * @throws Exception If resolving an injected object is failed.
      */
-    protected abstract B resolveInjectedBean(A annotation, Class<B> beanClass,
-                                             ConfigurableListableBeanFactory beanFactory,
-                                             Environment environment, ClassLoader classLoader) throws Exception;
+    protected abstract Object doGetInjectedBean(A annotation, Object bean, String beanName,
+                                                PropertyValues propertyValues, Class<?> injectedType) throws Exception;
 
     /**
-     * Generate a cache key of injected-{@link B bean}
+     * Build a cache key for injected-object. The context objects could help this method if
+     * necessary :
+     * <ul>
+     * <li>{@link #getBeanFactory() BeanFactory}</li>
+     * <li>{@link #getClassLoader() ClassLoader}</li>
+     * <li>{@link #getEnvironment() Environment}</li>
+     * </ul>
      *
-     * @param annotation  {@link A}
-     * @param beanClass   {@link Class}
-     * @param beanFactory {@link ConfigurableListableBeanFactory}
-     * @param environment {@link Environment}
-     * @param classLoader {@link ClassLoader}
+     * @param annotation     {@link A annotation}
+     * @param bean           Current bean that will be injected
+     * @param beanName       Current bean name that will be injected
+     * @param propertyValues {@link PropertyValues}
+     * @param injectedType   the type of injected-object
      * @return Bean cache key
      */
-    protected abstract String generateInjectedBeanCacheKey(A annotation, Class<B> beanClass,
-                                                           ConfigurableListableBeanFactory beanFactory,
-                                                           Environment environment, ClassLoader classLoader);
+    protected abstract String buildInjectedObjectCacheKey(A annotation, Object bean, String beanName,
+                                                          PropertyValues propertyValues, Class<?> injectedType);
 
     /**
-     * Get {@link B} {@link Map} in injected field.
+     * Get {@link Map} in injected field.
      *
-     * @return non-null {@link Map}
+     * @return non-null ready-only {@link Map}
      */
-    protected Map<InjectionMetadata.InjectedElement, B> getInjectedFieldBeanMap() {
+    protected Map<InjectionMetadata.InjectedElement, Object> getInjectedFieldObjectsMap() {
 
-        Map<InjectionMetadata.InjectedElement, B> injectedElementBeanMap =
-                new LinkedHashMap<InjectionMetadata.InjectedElement, B>();
+        Map<InjectionMetadata.InjectedElement, Object> injectedElementBeanMap =
+                new LinkedHashMap<InjectionMetadata.InjectedElement, Object>();
 
         for (AnnotatedInjectionMetadata metadata : injectionMetadataCache.values()) {
 
-            Collection<AnnotatedFieldElement> fieldElements = metadata.getFieldElements();
+            Collection<AnnotatedFieldInjectedElement> fieldElements = metadata.getFieldElements();
 
-            for (AnnotatedFieldElement fieldElement : fieldElements) {
+            for (AnnotatedFieldInjectedElement fieldElement : fieldElements) {
 
                 injectedElementBeanMap.put(fieldElement, fieldElement.bean);
 
@@ -385,43 +398,33 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
 
         }
 
-        return injectedElementBeanMap;
+        return Collections.unmodifiableMap(injectedElementBeanMap);
 
     }
 
     /**
-     * Get {@link B} {@link Map} in injected method.
+     * Get {@link Map} in injected method.
      *
      * @return non-null {@link Map}
      */
-    protected Map<InjectionMetadata.InjectedElement, B> getInjectedMethodBeanMap() {
+    protected Map<InjectionMetadata.InjectedElement, Object> getInjectedMethodObjectsMap() {
 
-        Map<InjectionMetadata.InjectedElement, B> injectedElementBeanMap =
-                new LinkedHashMap<InjectionMetadata.InjectedElement, B>();
+        Map<InjectionMetadata.InjectedElement, Object> injectedElementBeanMap =
+                new LinkedHashMap<InjectionMetadata.InjectedElement, Object>();
 
         for (AnnotatedInjectionMetadata metadata : injectionMetadataCache.values()) {
 
-            Collection<AnnotatedMethodElement> methodElements = metadata.getMethodElements();
+            Collection<AnnotatedMethodInjectedElement> methodElements = metadata.getMethodElements();
 
-            for (AnnotatedMethodElement methodElement : methodElements) {
+            for (AnnotatedMethodInjectedElement methodElement : methodElements) {
 
-                injectedElementBeanMap.put(methodElement, methodElement.bean);
+                injectedElementBeanMap.put(methodElement, methodElement.object);
 
             }
 
         }
 
-        return injectedElementBeanMap;
-
-    }
-
-    private <T> T getFieldValue(Object object, String fieldName, Class<T> fieldType) {
-
-        Field field = ReflectionUtils.findField(object.getClass(), fieldName, fieldType);
-
-        ReflectionUtils.makeAccessible(field);
-
-        return (T) ReflectionUtils.getField(field, object);
+        return Collections.unmodifiableMap(injectedElementBeanMap);
 
     }
 
@@ -430,23 +433,22 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
      */
     private class AnnotatedInjectionMetadata extends InjectionMetadata {
 
-        private final Collection<AnnotatedFieldElement> fieldElements;
+        private final Collection<AnnotatedFieldInjectedElement> fieldElements;
 
-        private final Collection<AnnotatedMethodElement> methodElements;
+        private final Collection<AnnotatedMethodInjectedElement> methodElements;
 
-
-        public AnnotatedInjectionMetadata(Class<?> targetClass, Collection<AnnotatedFieldElement> fieldElements,
-                                          Collection<AnnotatedMethodElement> methodElements) {
+        public AnnotatedInjectionMetadata(Class<?> targetClass, Collection<AnnotatedFieldInjectedElement> fieldElements,
+                                          Collection<AnnotatedMethodInjectedElement> methodElements) {
             super(targetClass, combine(fieldElements, methodElements));
             this.fieldElements = fieldElements;
             this.methodElements = methodElements;
         }
 
-        public Collection<AnnotatedFieldElement> getFieldElements() {
+        public Collection<AnnotatedFieldInjectedElement> getFieldElements() {
             return fieldElements;
         }
 
-        public Collection<AnnotatedMethodElement> getMethodElements() {
+        public Collection<AnnotatedMethodInjectedElement> getMethodElements() {
             return methodElements;
         }
     }
@@ -454,15 +456,15 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
     /**
      * {@link A} {@link Method} {@link InjectionMetadata.InjectedElement}
      */
-    private class AnnotatedMethodElement extends InjectionMetadata.InjectedElement {
+    private class AnnotatedMethodInjectedElement extends InjectionMetadata.InjectedElement {
 
         private final Method method;
 
         private final A annotation;
 
-        private volatile B bean;
+        private volatile Object object;
 
-        protected AnnotatedMethodElement(Method method, PropertyDescriptor pd, A annotation) {
+        protected AnnotatedMethodInjectedElement(Method method, PropertyDescriptor pd, A annotation) {
             super(method, pd);
             this.method = method;
             this.annotation = annotation;
@@ -471,28 +473,47 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
-            Class<B> beanClass = (Class<B>) pd.getPropertyType();
+            Class<?> injectedType = pd.getPropertyType();
 
             ReflectionUtils.makeAccessible(method);
 
-            method.invoke(bean, getInjectedBean(annotation, beanClass));
+            Object injectedObject = getInjectedObject(annotation, bean, beanName, pvs, injectedType);
+
+            method.invoke(bean, injectedObject);
 
         }
 
     }
 
     /**
+     * Subclass can override this method to customize injected-object
+     *
+     * @param injectedObject Injected object from {@link #getInjectedObject(Annotation, Object, String, PropertyValues, Class)}
+     * @param annotation     {@link A annotation}
+     * @param bean           Current bean that will be injected
+     * @param beanName       Current bean name that will be injected
+     * @param propertyValues {@link PropertyValues}
+     * @param injectedType   the type of injected-object
+     * @return An injected-object after customization
+     */
+    protected Object customizeInjectedObject(Object injectedObject, A annotation, Object bean, String beanName,
+                                             PropertyValues propertyValues,
+                                             Class<?> injectedType) {
+        return injectedObject;
+    }
+
+    /**
      * {@link A} {@link Field} {@link InjectionMetadata.InjectedElement}
      */
-    private class AnnotatedFieldElement extends InjectionMetadata.InjectedElement {
+    private class AnnotatedFieldInjectedElement extends InjectionMetadata.InjectedElement {
 
         private final Field field;
 
         private final A annotation;
 
-        private volatile B bean;
+        private volatile Object bean;
 
-        protected AnnotatedFieldElement(Field field, A annotation) {
+        protected AnnotatedFieldInjectedElement(Field field, A annotation) {
             super(field, null);
             this.field = field;
             this.annotation = annotation;
@@ -501,11 +522,13 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
-            Class<B> beanClass = (Class<B>) field.getType();
+            Class<?> injectedType = field.getType();
 
             ReflectionUtils.makeAccessible(field);
 
-            field.set(bean, getInjectedBean(annotation, beanClass));
+            Object injectedObject = getInjectedObject(annotation, bean, beanName, pvs, injectedType);
+
+            field.set(bean, injectedObject);
 
         }
 

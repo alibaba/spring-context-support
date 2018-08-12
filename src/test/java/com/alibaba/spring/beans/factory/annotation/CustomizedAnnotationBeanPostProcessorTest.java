@@ -20,6 +20,7 @@ import com.alibaba.spring.util.User;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -32,16 +33,16 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.lang.annotation.*;
 
 /**
- * {@link AnnotationInjectedBeanPostProcessor} Test
+ * {@link CustomizedAnnotationBeanPostProcessor} Test
  *
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.1
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        AnnotationInjectedBeanPostProcessorTest.TestConfiguration.class,
+        CustomizedAnnotationBeanPostProcessorTest.TestConfiguration.class,
 })
-public class AnnotationInjectedBeanPostProcessorTest {
+public class CustomizedAnnotationBeanPostProcessorTest {
 
     @Autowired
     @Qualifier("parent")
@@ -55,7 +56,7 @@ public class AnnotationInjectedBeanPostProcessorTest {
     private TestConfiguration.UserHolder userHolder;
 
     @Autowired
-    private AnnotationInjectedBeanPostProcessor processor;
+    private CustomizedAnnotationBeanPostProcessor processor;
 
     @Autowired
     private Environment environment;
@@ -64,16 +65,18 @@ public class AnnotationInjectedBeanPostProcessorTest {
     private ConfigurableListableBeanFactory beanFactory;
 
     @Test
-    public void testAnnotationInjectedBeanPostProcessor() {
+    public void testCustomizedAnnotationBeanPostProcessor() {
 
         Assert.assertEquals(environment, processor.getEnvironment());
         Assert.assertEquals(beanFactory.getBeanClassLoader(), processor.getClassLoader());
         Assert.assertEquals(beanFactory, processor.getBeanFactory());
-        Assert.assertEquals(Referenced.class, processor.getAnnotationType());
-        Assert.assertEquals(Ordered.LOWEST_PRECEDENCE, processor.getOrder());
-        Assert.assertEquals(1, processor.getBeans().size());
-        Assert.assertTrue(processor.getBeans().contains(parent.parentUser));
 
+        Assert.assertEquals(Referenced.class, processor.getAnnotationType());
+        Assert.assertEquals(1, processor.getInjectedObjects().size());
+        Assert.assertTrue(processor.getInjectedObjects().contains(parent.parentUser));
+        Assert.assertEquals(2, processor.getInjectedFieldObjectsMap().size());
+        Assert.assertEquals(1, processor.getInjectedMethodObjectsMap().size());
+        Assert.assertEquals(Ordered.HIGHEST_PRECEDENCE, processor.getOrder());
     }
 
     @Test
@@ -141,8 +144,10 @@ public class AnnotationInjectedBeanPostProcessorTest {
         }
 
         @Bean
-        public ReferencedPostProcessor processor() {
-            return new ReferencedPostProcessor();
+        public ReferencedAnnotationBeanPostProcessor processor() {
+            ReferencedAnnotationBeanPostProcessor beanPostProcessor = new ReferencedAnnotationBeanPostProcessor();
+            beanPostProcessor.setOrder(Ordered.HIGHEST_PRECEDENCE);
+            return beanPostProcessor;
         }
 
     }
@@ -154,21 +159,17 @@ public class AnnotationInjectedBeanPostProcessorTest {
     public @interface Referenced {
     }
 
-    private static class ReferencedPostProcessor extends AnnotationInjectedBeanPostProcessor<Referenced, User> {
+    private static class ReferencedAnnotationBeanPostProcessor extends CustomizedAnnotationBeanPostProcessor<Referenced> {
 
 
         @Override
-        protected User resolveInjectedBean(Referenced annotation, Class<User> beanClass,
-                                           ConfigurableListableBeanFactory beanFactory, Environment environment,
-                                           ClassLoader classLoader) throws Exception {
-            return beanFactory.getBean(beanClass);
+        protected Object doGetInjectedBean(Referenced annotation, Object bean, String beanName, PropertyValues propertyValues, Class<?> injectedType) throws Exception {
+            return getBeanFactory().getBean(injectedType);
         }
 
         @Override
-        protected String generateInjectedBeanCacheKey(Referenced annotation, Class<User> beanClass,
-                                                      ConfigurableListableBeanFactory beanFactory,
-                                                      Environment environment, ClassLoader classLoader) {
-            return beanClass.getName();
+        protected String buildInjectedObjectCacheKey(Referenced annotation, Object bean, String beanName, PropertyValues propertyValues, Class<?> injectedType) {
+            return injectedType.getName();
         }
     }
 
