@@ -21,9 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
-import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -35,6 +33,7 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.core.env.Environment;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -63,8 +62,8 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  * @since 1.0.1
  */
 public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, B> extends
-        InstantiationAwareBeanPostProcessorAdapter implements BeanFactoryPostProcessor,
-        MergedBeanDefinitionPostProcessor, PriorityOrdered, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
+        InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
+        BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
 
     private final Log logger = LogFactory.getLog(getClass());
 
@@ -106,6 +105,12 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation, 
 
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
+    }
+
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        Assert.isInstanceOf(ConfigurableListableBeanFactory.class, beanFactory,
+                "AnnotationInjectedBeanPostProcessor requires a ConfigurableListableBeanFactory");
+        this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 
     @Override
