@@ -20,7 +20,6 @@ import com.alibaba.spring.util.User;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -163,12 +162,15 @@ public class CustomizedAnnotationBeanPostProcessorTest {
     private static class ReferencedAnnotationBeanPostProcessor extends CustomizedAnnotationBeanPostProcessor<Referenced> {
 
         @Override
-        protected Object doGetInjectedBean(Referenced annotation, Object bean, String beanName, Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) throws Exception {
+        protected Object doGetInjectedBean(Referenced annotation, Object bean, String beanName, Class<?> injectedType,
+                                           InjectionMetadata.InjectedElement injectedElement) throws Exception {
             return getBeanFactory().getBean(injectedType);
         }
 
         @Override
-        protected String buildInjectedObjectCacheKey(Referenced annotation, Object bean, String beanName, Class<?> injectedType) {
+        protected String buildInjectedObjectCacheKey(Referenced annotation, Object bean, String beanName,
+                                                     Class<?> injectedType,
+                                                     InjectionMetadata.InjectedElement injectedElement) {
             return injectedType.getName();
         }
     }

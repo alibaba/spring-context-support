@@ -322,7 +322,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
     protected Object getInjectedObject(A annotation, Object bean, String beanName, Class<?> injectedType,
                                        InjectionMetadata.InjectedElement injectedElement) throws Exception {
 
-        String cacheKey = buildInjectedObjectCacheKey(annotation, bean, beanName, injectedType);
+        String cacheKey = buildInjectedObjectCacheKey(annotation, bean, beanName, injectedType, injectedElement);
 
         Object injectedObject = injectedObjectsCache.get(cacheKey);
 
@@ -365,14 +365,16 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
      * <li>{@link #getEnvironment() Environment}</li>
      * </ul>
      *
-     * @param annotation   {@link A annotation}
-     * @param bean         Current bean that will be injected
-     * @param beanName     Current bean name that will be injected
-     * @param injectedType the type of injected-object
+     * @param annotation      {@link A annotation}
+     * @param bean            Current bean that will be injected
+     * @param beanName        Current bean name that will be injected
+     * @param injectedType    the type of injected-object
+     * @param injectedElement {@link InjectionMetadata.InjectedElement}
      * @return Bean cache key
      */
     protected abstract String buildInjectedObjectCacheKey(A annotation, Object bean, String beanName,
-                                                          Class<?> injectedType);
+                                                          Class<?> injectedType,
+                                                          InjectionMetadata.InjectedElement injectedElement);
 
     /**
      * Get {@link Map} in injected field.
