@@ -24,18 +24,24 @@ public class PropertySourcesUtilsTest {
         MutablePropertySources propertySources = new MutablePropertySources();
 
         Map<String, Object> source = new HashMap<String, Object>();
+        Map<String, Object> source2 = new HashMap<String, Object>();
 
-        MapPropertySource propertySource = new MapPropertySource("test", source);
+        MapPropertySource propertySource = new MapPropertySource("propertySource", source);
+        MapPropertySource propertySource2 = new MapPropertySource("propertySource2", source2);
 
-        propertySources.addFirst(propertySource);
-        propertySources.addFirst(propertySource);
+        propertySources.addLast(propertySource);
+        propertySources.addLast(propertySource2);
 
         Map<String, Object> result = PropertySourcesUtils.getSubProperties(propertySources, "user");
 
         Assert.assertEquals(Collections.emptyMap(), result);
 
+        source.put("age", "31");
         source.put("user.name", "Mercy");
-        source.put("user.age", "31");
+        source.put("user.age", "${age}");
+
+        source2.put("user.name", "mercyblitz");
+        source2.put("user.age", "32");
 
         Map<String, Object> expected = new HashMap<String, Object>();
         expected.put("name", "Mercy");

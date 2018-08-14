@@ -1,9 +1,8 @@
 package com.alibaba.spring.util;
 
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.env.PropertySources;
+import org.springframework.core.env.*;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -27,7 +26,33 @@ public abstract class PropertySourcesUtils {
      */
     public static Map<String, Object> getSubProperties(Iterable<PropertySource<?>> propertySources, String prefix) {
 
+        // Non-Extension AbstractEnvironment
+        AbstractEnvironment environment = new AbstractEnvironment() {
+        };
+
+        MutablePropertySources mutablePropertySources = environment.getPropertySources();
+
+        for (PropertySource<?> source : propertySources) {
+            mutablePropertySources.addLast(source);
+        }
+
+        return getSubProperties(environment, prefix);
+
+    }
+
+    /**
+     * Get Sub {@link Properties}
+     *
+     * @param environment {@link ConfigurableEnvironment}
+     * @param prefix      the prefix of property name
+     * @return Map
+     * @see Properties
+     */
+    public static Map<String, Object> getSubProperties(ConfigurableEnvironment environment, String prefix) {
+
         Map<String, Object> subProperties = new LinkedHashMap<String, Object>();
+
+        MutablePropertySources propertySources = environment.getPropertySources();
 
         String normalizedPrefix = normalizePrefix(prefix);
 
@@ -38,6 +63,10 @@ public abstract class PropertySourcesUtils {
                         String subName = name.substring(normalizedPrefix.length());
                         if (!subProperties.containsKey(subName)) { // take first one
                             Object value = source.getProperty(name);
+                            if (value instanceof String) {
+                                // Resolve placeholder
+                                value = environment.resolvePlaceholders((String) value);
+                            }
                             subProperties.put(subName, value);
                         }
                     }
@@ -45,7 +74,7 @@ public abstract class PropertySourcesUtils {
             }
         }
 
-        return subProperties;
+        return Collections.unmodifiableMap(subProperties);
 
     }
 
