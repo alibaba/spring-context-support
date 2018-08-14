@@ -33,16 +33,16 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.lang.annotation.*;
 
 /**
- * {@link CustomizedAnnotationBeanPostProcessor} Test
+ * {@link AnnotationInjectedBeanPostProcessor} Test
  *
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.1
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
-        CustomizedAnnotationBeanPostProcessorTest.TestConfiguration.class,
+        AnnotationInjectedBeanPostProcessorTest.TestConfiguration.class,
 })
-public class CustomizedAnnotationBeanPostProcessorTest {
+public class AnnotationInjectedBeanPostProcessorTest {
 
     @Autowired
     @Qualifier("parent")
@@ -56,7 +56,7 @@ public class CustomizedAnnotationBeanPostProcessorTest {
     private TestConfiguration.UserHolder userHolder;
 
     @Autowired
-    private CustomizedAnnotationBeanPostProcessor processor;
+    private AnnotationInjectedBeanPostProcessor processor;
 
     @Autowired
     private Environment environment;
@@ -144,8 +144,8 @@ public class CustomizedAnnotationBeanPostProcessorTest {
         }
 
         @Bean
-        public ReferencedAnnotationBeanPostProcessor processor() {
-            ReferencedAnnotationBeanPostProcessor beanPostProcessor = new ReferencedAnnotationBeanPostProcessor();
+        public ReferencedAnnotationInjectedBeanPostProcessor processor() {
+            ReferencedAnnotationInjectedBeanPostProcessor beanPostProcessor = new ReferencedAnnotationInjectedBeanPostProcessor();
             beanPostProcessor.setOrder(Ordered.HIGHEST_PRECEDENCE);
             return beanPostProcessor;
         }
@@ -159,7 +159,7 @@ public class CustomizedAnnotationBeanPostProcessorTest {
     public @interface Referenced {
     }
 
-    private static class ReferencedAnnotationBeanPostProcessor extends CustomizedAnnotationBeanPostProcessor<Referenced> {
+    private static class ReferencedAnnotationInjectedBeanPostProcessor extends AnnotationInjectedBeanPostProcessor<Referenced> {
 
         @Override
         protected Object doGetInjectedBean(Referenced annotation, Object bean, String beanName, Class<?> injectedType,

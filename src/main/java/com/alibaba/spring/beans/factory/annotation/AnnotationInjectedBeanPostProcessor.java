@@ -59,7 +59,7 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.1
  */
-public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation> extends
+public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation> extends
         InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
         BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
 
@@ -70,9 +70,9 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
     private final Class<A> annotationType;
 
     private final ConcurrentMap<String, AnnotatedInjectionMetadata> injectionMetadataCache =
-            new ConcurrentHashMap<String, AnnotatedInjectionMetadata>(32);
+            new ConcurrentHashMap<String, AnnotatedInjectionMetadata>(CACHE_SIZE);
 
-    private final ConcurrentMap<String, Object> injectedObjectsCache = new ConcurrentHashMap<String, Object>(32);
+    private final ConcurrentMap<String, Object> injectedObjectsCache = new ConcurrentHashMap<String, Object>(CACHE_SIZE);
 
     private ConfigurableListableBeanFactory beanFactory;
 
@@ -82,7 +82,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
     private int order = Ordered.LOWEST_PRECEDENCE;
 
-    public CustomizedAnnotationBeanPostProcessor() {
+    public AnnotationInjectedBeanPostProcessor() {
         this.annotationType = resolveGenericType(getClass());
     }
 
@@ -105,7 +105,7 @@ public abstract class CustomizedAnnotationBeanPostProcessor<A extends Annotation
 
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         Assert.isInstanceOf(ConfigurableListableBeanFactory.class, beanFactory,
-                "CustomizedAnnotationBeanPostProcessor requires a ConfigurableListableBeanFactory");
+                "AnnotationInjectedBeanPostProcessor requires a ConfigurableListableBeanFactory");
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 
