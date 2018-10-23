@@ -46,7 +46,7 @@ public class AnnotatedBeanDefinitionRegistryUtilsTest {
 
         int count = AnnotatedBeanDefinitionRegistryUtils.scanBasePackages(registry, getClass().getPackage().getName());
 
-        Assert.assertEquals(3, count);
+        Assert.assertEquals(5, count);
 
         String[] beanNames = registry.getBeanNamesForType(TestBean.class);
 

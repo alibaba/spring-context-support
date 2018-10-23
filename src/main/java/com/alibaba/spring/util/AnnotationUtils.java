@@ -1,10 +1,29 @@
 package com.alibaba.spring.util;
 
-import java.lang.annotation.*;
-import java.lang.reflect.Method;
-import java.util.*;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.PropertyResolver;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.lang.String.valueOf;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
+import static org.springframework.core.annotation.AnnotationUtils.getAnnotationAttributes;
+import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
+import static org.springframework.util.CollectionUtils.arrayToList;
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
+import static org.springframework.util.StringUtils.trimWhitespace;
 
 /**
  * {@link Annotation} Utilities
@@ -128,4 +147,74 @@ public abstract class AnnotationUtils {
 
     }
 
+    /**
+     * Get the {@link Annotation} attributes
+     *
+     * @param annotation           specified {@link Annotation}
+     * @param ignoreDefaultValue   whether ignore default value or not
+     * @param ignoreAttributeNames the attribute names of annotation should be ignored
+     * @return non-null
+     * @since 1.0.2
+     */
+    public static Map<String, Object> getAttributes(Annotation annotation, boolean ignoreDefaultValue,
+                                                    String... ignoreAttributeNames) {
+        return getAttributes(annotation, null, ignoreDefaultValue, ignoreAttributeNames);
+    }
+
+    /**
+     * Get the {@link Annotation} attributes
+     *
+     * @param annotation           specified {@link Annotation}
+     * @param propertyResolver     {@link PropertyResolver} instance, e.g {@link Environment}
+     * @param ignoreDefaultValue   whether ignore default value or not
+     * @param ignoreAttributeNames the attribute names of annotation should be ignored
+     * @return non-null
+     * @since 1.0.2
+     */
+    public static Map<String, Object> getAttributes(Annotation annotation, PropertyResolver propertyResolver,
+                                                    boolean ignoreDefaultValue, String... ignoreAttributeNames) {
+
+        Set<String> ignoreAttributeNamesSet = new HashSet<String>(arrayToList(ignoreAttributeNames));
+
+        Map<String, Object> attributes = getAnnotationAttributes(annotation);
+
+        Map<String, Object> actualAttributes = new LinkedHashMap<String, Object>();
+
+        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+
+            String attributeName = entry.getKey();
+            Object attributeValue = entry.getValue();
+
+            // ignore default attribute value
+            if (ignoreDefaultValue && nullSafeEquals(attributeValue, getDefaultValue(annotation, attributeName))) {
+                continue;
+            }
+
+            // ignore attribute name
+            if (ignoreAttributeNamesSet.contains(attributeName)) {
+                continue;
+            }
+
+            if (attributeValue instanceof String) {
+                attributeValue = resolvePlaceholders(valueOf(attributeValue), propertyResolver);
+            } else if (attributeValue instanceof String[]) {
+                String[] values = (String[]) attributeValue;
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = resolvePlaceholders(values[i], propertyResolver);
+                }
+                attributeValue = values;
+            }
+            actualAttributes.put(attributeName, attributeValue);
+        }
+        return actualAttributes;
+    }
+
+    private static String resolvePlaceholders(String attributeValue, PropertyResolver propertyResolver) {
+        String resolvedValue = attributeValue;
+        if (propertyResolver != null) {
+            resolvedValue = propertyResolver.resolvePlaceholders(resolvedValue);
+            resolvedValue = trimWhitespace(resolvedValue);
+        }
+        return resolvedValue;
+    }
 }

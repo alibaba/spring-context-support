@@ -2,15 +2,25 @@ package com.alibaba.spring.util;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowire;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.context.annotation.Bean;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.util.ReflectionUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import static com.alibaba.spring.util.AnnotationUtils.findAnnotations;
+import static com.alibaba.spring.util.AnnotationUtils.getAttributes;
+import static com.alibaba.spring.util.ObjectUtils.of;
 
 /**
  * {@link AnnotationUtils} Test
@@ -20,6 +30,21 @@ import java.util.Map;
  * @since 2017.01.13
  */
 public class AnnotationUtilsTest {
+
+    @Bean(name = "dummy-bean")
+    public String dummyBean() {
+        return "Dummy Bean";
+    }
+
+    @Bean
+    public String dummyBean2() {
+        return "Dummy Bean 2";
+    }
+
+    @Bean(name = "${beanName}")
+    public String dummyBean3() {
+        return "Dummy Bean 3";
+    }
 
     @Test
     public void testIsPresent() {
@@ -57,7 +82,7 @@ public class AnnotationUtilsTest {
                 String.class, String.class);
 
         Map<ElementType, List<RuntimeAnnotation>> annotationsMap =
-                AnnotationUtils.findAnnotations(method, RuntimeAnnotation.class);
+                findAnnotations(method, RuntimeAnnotation.class);
 
         Assert.assertEquals(3, annotationsMap.size());
 
@@ -98,17 +123,64 @@ public class AnnotationUtilsTest {
         method = ReflectionUtils.findMethod(ClassAnnotationHandler.class, "handle",
                 String.class);
 
-        annotationsMap =
-                AnnotationUtils.findAnnotations(method, RuntimeAnnotation.class);
+        annotationsMap = findAnnotations(method, RuntimeAnnotation.class);
 
         Assert.assertTrue(annotationsMap.isEmpty());
 
-        Map<ElementType, List<ClassAnnotation>> classAnnotationsMap = AnnotationUtils.findAnnotations(method,
+        Map<ElementType, List<ClassAnnotation>> classAnnotationsMap = findAnnotations(method,
                 ClassAnnotation.class);
 
         Assert.assertTrue(classAnnotationsMap.isEmpty());
     }
 
+    @Test
+    public void testGetAttributes() {
+
+        Bean annotation = getAnnotation("dummyBean", Bean.class);
+
+        Map<String, Object> attributes = getAttributes(annotation, null, true);
+        Assert.assertEquals(1, attributes.size());
+        Assert.assertTrue(Arrays.equals(new String[]{"dummy-bean"}, (String[]) attributes.get("name")));
+
+        attributes = getAttributes(annotation, true);
+        Assert.assertEquals(1, attributes.size());
+        Assert.assertTrue(Arrays.equals(new String[]{"dummy-bean"}, (String[]) attributes.get("name")));
+
+        attributes = getAttributes(annotation, null, false);
+        Assert.assertEquals(4, attributes.size());
+        Assert.assertEquals(Autowire.NO, attributes.get("autowire"));
+        Assert.assertEquals("", attributes.get("initMethod"));
+        Assert.assertEquals(AbstractBeanDefinition.INFER_METHOD, attributes.get("destroyMethod"));
+
+        MockEnvironment environment = new MockEnvironment();
+
+        attributes = getAttributes(annotation, environment, false);
+        Assert.assertEquals(4, attributes.size());
+        Assert.assertEquals(Autowire.NO, attributes.get("autowire"));
+        Assert.assertEquals("", attributes.get("initMethod"));
+        Assert.assertEquals(AbstractBeanDefinition.INFER_METHOD, attributes.get("destroyMethod"));
+
+        annotation = getAnnotation("dummyBean2", Bean.class);
+
+        attributes = getAttributes(annotation, null, true);
+        Assert.assertTrue(attributes.isEmpty());
+
+        attributes = getAttributes(annotation, environment, true);
+        Assert.assertTrue(attributes.isEmpty());
+
+        environment.setProperty("beanName", "Your Bean Name");
+
+        annotation = getAnnotation("dummyBean3", Bean.class);
+        attributes = getAttributes(annotation, environment, true);
+        Assert.assertEquals(1, attributes.size());
+        Assert.assertTrue(Arrays.deepEquals(of(environment.getProperty("beanName")), (String[]) attributes.get("name")));
+
+    }
+
+    private <A extends Annotation> A getAnnotation(String methodName, Class<A> annotationClass) {
+        Method method = ReflectionUtils.findMethod(getClass(), methodName);
+        return method.getAnnotation(annotationClass);
+    }
 
     @RuntimeAnnotation("type")
     private static class RuntimeAnnotationHandler {
