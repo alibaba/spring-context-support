@@ -67,7 +67,7 @@ public abstract class BeanFactoryUtils {
      * @param beanNames   the names of Bean
      * @param beanType    the {@link Class type} of Bean
      * @param <T>         the {@link Class type} of Bean
-     * @return
+     * @return the read-only and non-null {@link List} of Bean names
      */
     public static <T> List<T> getBeans(ListableBeanFactory beanFactory, String[] beanNames, Class<T> beanType) {
 
@@ -82,6 +82,5 @@ public abstract class BeanFactoryUtils {
         }
 
         return Collections.unmodifiableList(beans);
-
     }
 }
