@@ -12,7 +12,6 @@ public class User {
 
     private int age;
 
-
     public String getName() {
         return name;
     }
@@ -29,4 +28,29 @@ public class User {
         this.age = age;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+
+        User user = (User) o;
+
+        if (getAge() != user.getAge()) return false;
+        return getName() != null ? getName().equals(user.getName()) : user.getName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName() != null ? getName().hashCode() : 0;
+        result = 31 * result + getAge();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
 }

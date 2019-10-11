@@ -16,6 +16,8 @@
  */
 package com.alibaba.spring.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -29,7 +31,9 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @since 1.0.3
  */
-public class BeanRegistrar {
+public abstract class BeanRegistrar {
+
+    private static final Log log = LogFactory.getLog(BeanRegistrar.class);
 
     /**
      * Register Infrastructure Bean
@@ -50,6 +54,11 @@ public class BeanRegistrar {
             beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
             beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
             registered = true;
+
+            if (log.isInfoEnabled()) {
+                log.info("The Infrastructure bean definition [" + beanDefinition
+                        + "with name [" + beanName + "] has been registered.");
+            }
         }
 
         return registered;
