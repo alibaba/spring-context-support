@@ -1,4 +1,4 @@
-# An internal support project for spring-context in Alibaba
+# A support module of spring-context
 
 =====================
 
@@ -23,7 +23,7 @@ Current project that extends `spring-context` is based on Spring Framework 3.2.x
     <dependency>
         <groupId>com.alibaba.spring</groupId>
         <artifactId>spring-context-support</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </dependency>
 
     ......

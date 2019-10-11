@@ -139,15 +139,12 @@ public class AnnotationUtilsTest {
         Bean annotation = getAnnotation("dummyBean", Bean.class);
 
         Map<String, Object> attributes = getAttributes(annotation, null, true);
-        Assert.assertEquals(1, attributes.size());
         Assert.assertTrue(Arrays.equals(new String[]{"dummy-bean"}, (String[]) attributes.get("name")));
 
         attributes = getAttributes(annotation, true);
-        Assert.assertEquals(1, attributes.size());
         Assert.assertTrue(Arrays.equals(new String[]{"dummy-bean"}, (String[]) attributes.get("name")));
 
         attributes = getAttributes(annotation, null, false);
-        Assert.assertEquals(4, attributes.size());
         Assert.assertEquals(Autowire.NO, attributes.get("autowire"));
         Assert.assertEquals("", attributes.get("initMethod"));
         Assert.assertEquals(AbstractBeanDefinition.INFER_METHOD, attributes.get("destroyMethod"));
@@ -155,7 +152,6 @@ public class AnnotationUtilsTest {
         MockEnvironment environment = new MockEnvironment();
 
         attributes = getAttributes(annotation, environment, false);
-        Assert.assertEquals(4, attributes.size());
         Assert.assertEquals(Autowire.NO, attributes.get("autowire"));
         Assert.assertEquals("", attributes.get("initMethod"));
         Assert.assertEquals(AbstractBeanDefinition.INFER_METHOD, attributes.get("destroyMethod"));
@@ -172,7 +168,6 @@ public class AnnotationUtilsTest {
 
         annotation = getAnnotation("dummyBean3", Bean.class);
         attributes = getAttributes(annotation, environment, true);
-        Assert.assertEquals(1, attributes.size());
         Assert.assertTrue(Arrays.deepEquals(of(environment.getProperty("beanName")), (String[]) attributes.get("name")));
 
     }

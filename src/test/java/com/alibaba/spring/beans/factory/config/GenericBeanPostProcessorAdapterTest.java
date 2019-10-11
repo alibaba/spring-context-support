@@ -2,7 +2,6 @@ package com.alibaba.spring.beans.factory.config;
 
 import com.alibaba.spring.util.Bean;
 import com.alibaba.spring.util.TestBean;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.BeansException;

@@ -6,6 +6,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 import java.util.Map;
 
+import static com.alibaba.spring.util.PropertySourcesUtils.getSubProperties;
+
 /**
  * {@link PropertyValues} Utilities
  *
@@ -24,7 +26,7 @@ public abstract class PropertyValuesUtils {
      */
     public static PropertyValues getSubPropertyValues(ConfigurableEnvironment environment, String prefix) {
 
-        Map<String, Object> subProperties = PropertySourcesUtils.getSubProperties(environment.getPropertySources(), prefix);
+        Map<String, Object> subProperties = getSubProperties(environment.getPropertySources(), environment, prefix);
 
         PropertyValues subPropertyValues = new MutablePropertyValues(subProperties);
 

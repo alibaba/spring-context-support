@@ -1,13 +1,17 @@
 package com.alibaba.spring.util;
 
-import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.alibaba.spring.util.PropertySourcesUtils.getSubProperties;
+import static org.junit.Assert.assertEquals;
 
 /**
  * {@link PropertySourcesUtils} Test
@@ -21,7 +25,10 @@ public class PropertySourcesUtilsTest {
     @Test
     public void testGetSubProperties() {
 
-        MutablePropertySources propertySources = new MutablePropertySources();
+        ConfigurableEnvironment environment = new AbstractEnvironment() {
+        };
+
+        MutablePropertySources propertySources = environment.getPropertySources();
 
         Map<String, Object> source = new HashMap<String, Object>();
         Map<String, Object> source2 = new HashMap<String, Object>();
@@ -32,9 +39,9 @@ public class PropertySourcesUtilsTest {
         propertySources.addLast(propertySource);
         propertySources.addLast(propertySource2);
 
-        Map<String, Object> result = PropertySourcesUtils.getSubProperties(propertySources, "user");
+        Map<String, Object> result = getSubProperties(propertySources, "user");
 
-        Assert.assertEquals(Collections.emptyMap(), result);
+        assertEquals(Collections.emptyMap(), result);
 
         source.put("age", "31");
         source.put("user.name", "Mercy");
@@ -47,17 +54,21 @@ public class PropertySourcesUtilsTest {
         expected.put("name", "Mercy");
         expected.put("age", "31");
 
-        result = PropertySourcesUtils.getSubProperties(propertySources, "user");
+        assertEquals(expected, getSubProperties((Iterable) propertySources, "user"));
 
-        Assert.assertEquals(expected, result);
+        assertEquals(expected, getSubProperties(environment, "user"));
 
-        result = PropertySourcesUtils.getSubProperties(propertySources, "");
+        assertEquals(expected, getSubProperties(propertySources, "user"));
 
-        Assert.assertEquals(Collections.emptyMap(), result);
+        assertEquals(expected, getSubProperties(propertySources, environment, "user"));
 
-        result = PropertySourcesUtils.getSubProperties(propertySources, "no-exists");
+        result = getSubProperties(propertySources, "");
 
-        Assert.assertEquals(Collections.emptyMap(), result);
+        assertEquals(Collections.emptyMap(), result);
+
+        result = getSubProperties(propertySources, "no-exists");
+
+        assertEquals(Collections.emptyMap(), result);
 
     }
 

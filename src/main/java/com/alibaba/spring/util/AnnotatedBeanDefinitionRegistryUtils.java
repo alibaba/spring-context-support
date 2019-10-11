@@ -2,17 +2,25 @@ package com.alibaba.spring.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.springframework.util.ClassUtils.resolveClassName;
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
 /**
  * Annotated {@link BeanDefinition} Utilities
@@ -26,7 +34,43 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
     private static final Log logger = LogFactory.getLog(AnnotatedBeanDefinitionRegistryUtils.class);
 
     /**
-     * Register Beans
+     * Is present bean that was registered by the specified {@link Annotation annotated} {@link Class class}
+     *
+     * @param registry       {@link BeanDefinitionRegistry}
+     * @param annotatedClass the {@link Annotation annotated} {@link Class class}
+     * @return if present, return <code>true</code>, or <code>false</code>
+     * @since 1.0.3
+     */
+    public static boolean isPresentBean(BeanDefinitionRegistry registry, Class<?> annotatedClass) {
+
+        boolean present = false;
+
+        String[] beanNames = registry.getBeanDefinitionNames();
+
+        ClassLoader classLoader = annotatedClass.getClassLoader();
+
+        for (String beanName : beanNames) {
+            BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
+            if (beanDefinition instanceof AnnotatedBeanDefinition) {
+                AnnotationMetadata annotationMetadata = ((AnnotatedBeanDefinition) beanDefinition).getMetadata();
+                String className = annotationMetadata.getClassName();
+                Class<?> targetClass = resolveClassName(className, classLoader);
+                present = nullSafeEquals(targetClass, annotatedClass);
+                if (present) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(format("The annotatedClass[class : %s , bean name : %s] was present in registry[%s]",
+                                className, beanName, registry));
+                    }
+                    break;
+                }
+            }
+        }
+
+        return present;
+    }
+
+    /**
+     * Register Beans if not present in {@link BeanDefinitionRegistry registry}
      *
      * @param registry         {@link BeanDefinitionRegistry}
      * @param annotatedClasses {@link Annotation annotation} class
@@ -37,12 +81,20 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
             return;
         }
 
-        boolean debugEnabled = logger.isDebugEnabled();
+        // Remove all annotated-classes that have been registered
+        Iterator<Class<?>> iterator = new ArrayList<Class<?>>(asList(annotatedClasses)).iterator();
+
+        while (iterator.hasNext()) {
+            Class<?> annotatedClass = iterator.next();
+            if (isPresentBean(registry, annotatedClass)) {
+                iterator.remove();
+            }
+        }
 
         AnnotatedBeanDefinitionReader reader = new AnnotatedBeanDefinitionReader(registry);
 
-        if (debugEnabled) {
-            logger.debug(registry.getClass().getSimpleName() + " will register annotated classes : " + Arrays.asList(annotatedClasses) + " .");
+        if (logger.isDebugEnabled()) {
+            logger.debug(registry.getClass().getSimpleName() + " will register annotated classes : " + asList(annotatedClasses) + " .");
         }
 
         reader.register(annotatedClasses);
