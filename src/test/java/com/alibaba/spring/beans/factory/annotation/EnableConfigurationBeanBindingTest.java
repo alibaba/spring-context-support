@@ -27,59 +27,81 @@ import com.alibaba.spring.context.config.ConfigurationBeanBinder;
 import com.alibaba.spring.context.config.ConfigurationBeanCustomizer;
 import com.alibaba.spring.context.config.DefaultConfigurationBeanBinder;
 import com.alibaba.spring.util.User;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePropertySource;
+
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {
-        EnableConfigurationBeanBindingTest.class
-})
-@TestPropertySource(properties = {
-        "user.id = m",
-        "user.name = mercyblitz",
-        "user.age = 34"
-})
-@EnableConfigurationBeanBinding(prefix = "user", type = User.class)
 public class EnableConfigurationBeanBindingTest {
 
-    @Autowired
-    @Qualifier("m")
-    private User user;
+    private AnnotationConfigApplicationContext context;
 
-    @Bean
-    public static ConfigurationBeanCustomizer customizer() {
-        return new ConfigurationBeanCustomizer() {
+    @EnableConfigurationBeanBinding(prefix = "user", type = User.class)
+    static class Config {
 
-            @Override
-            public int getOrder() {
-                return 0;
-            }
+        @Bean
+        public ConfigurationBeanCustomizer customizer() {
+            return new ConfigurationBeanCustomizer() {
 
-            @Override
-            public void customize(String beanName, Object configurationBean) {
-                if ("m".equals(beanName) && configurationBean instanceof User) {
-                    User user = (User) configurationBean;
-                    user.setAge(19);
+                @Override
+                public int getOrder() {
+                    return 0;
                 }
-            }
-        };
+
+                @Override
+                public void customize(String beanName, Object configurationBean) {
+                    if ("m".equals(beanName) && configurationBean instanceof User) {
+                        User user = (User) configurationBean;
+                        user.setAge(19);
+                    }
+                }
+            };
+        }
+
+        @Bean
+        public ConfigurationBeanBinder configurationBeanBinder() {
+            return new DefaultConfigurationBeanBinder();
+        }
     }
 
-    @Bean
-    public ConfigurationBeanBinder configurationBeanBinder() {
-        return new DefaultConfigurationBeanBinder();
+    @Before
+    public void setUp() {
+        context = new AnnotationConfigApplicationContext();
+        context.setEnvironment(new AbstractEnvironment() {
+            @Override
+            protected void customizePropertySources(MutablePropertySources propertySources) {
+                ResourceLoader resourceLoader = new DefaultResourceLoader();
+                ResourcePropertySource propertySource = null;
+                try {
+                    propertySource = new ResourcePropertySource("temp",
+                            resourceLoader.getResource("classpath:/enable-configuration-bean-binding.properties"));
+                } catch (IOException e) {
+                }
+                propertySources.addFirst(propertySource);
+            }
+        });
+        context.register(Config.class);
+        context.refresh();
+    }
+
+    @After
+    public void tearDown() {
+        context.close();
     }
 
     @Test
     public void testUser() {
+        User user = context.getBean("m", User.class);
         assertEquals("mercyblitz", user.getName());
         assertEquals(19, user.getAge());
     }
