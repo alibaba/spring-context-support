@@ -47,7 +47,7 @@ import static org.springframework.util.ReflectionUtils.findMethod;
  * In contrast, If current runtime is based on Spring Framework that {@link #supportsEarlyApplicationEvents() supports
  * early application events}, {@link DeferredApplicationEventPublisher} only delegates the
  * {@link ConfigurableApplicationContext Application Context} that was injected by
- * {@link #DeferredApplicationEventPublisher(ConfigurableApplicationContext) constructor}.
+ * {@link #DeferredApplicationEventPublisher(ApplicationEventPublisher) constructor}.
  *
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.4
