@@ -28,7 +28,6 @@ import java.lang.annotation.Target;
 
 /**
  * Enables Spring's annotation-driven configuration bean from {@link PropertySources properties}.
- * </pre>
  *
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @see ConfigurationBeanBindingRegistrar
