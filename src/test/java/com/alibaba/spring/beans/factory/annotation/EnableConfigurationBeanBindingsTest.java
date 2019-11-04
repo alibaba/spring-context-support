@@ -16,27 +16,25 @@
  */
 package com.alibaba.spring.beans.factory.annotation;
 
-import org.springframework.context.annotation.Import;
+import com.alibaba.spring.util.User;
+import org.junit.Test;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static org.junit.Assert.assertEquals;
 
 /**
- * The annotation composes the multiple {@link EnableConfigurationBeanBinding EnableConfigurationBeanBindings}
+ * {@link EnableConfigurationBeanBindings} Test cases
  *
  * @since 1.0.4
  */
-@Target({ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@Import(ConfigurationBeanBindingsRegister.class)
-public @interface EnableConfigurationBeanBindings {
+@EnableConfigurationBeanBindings(
+        @EnableConfigurationBeanBinding(prefix = "usr", type = User.class)
+)
+public class EnableConfigurationBeanBindingsTest extends AbstractEnableConfigurationBeanBindingTest {
 
-    /**
-     * @return the array of {@link EnableConfigurationBeanBinding EnableConfigurationBeanBindings}
-     */
-    EnableConfigurationBeanBinding[] value();
+    @Test
+    public void testUser() {
+        User user = context.getBean("m", User.class);
+        assertEquals("mercyblitz", user.getName());
+        assertEquals(34, user.getAge());
+    }
 }

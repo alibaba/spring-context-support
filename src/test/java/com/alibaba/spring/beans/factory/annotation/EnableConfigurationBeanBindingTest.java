@@ -27,76 +27,37 @@ import com.alibaba.spring.context.config.ConfigurationBeanBinder;
 import com.alibaba.spring.context.config.ConfigurationBeanCustomizer;
 import com.alibaba.spring.context.config.DefaultConfigurationBeanBinder;
 import com.alibaba.spring.util.User;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePropertySource;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 
-public class EnableConfigurationBeanBindingTest {
 
-    private AnnotationConfigApplicationContext context;
+@EnableConfigurationBeanBinding(prefix = "usr", type = User.class)
+public class EnableConfigurationBeanBindingTest extends AbstractEnableConfigurationBeanBindingTest {
 
-    @EnableConfigurationBeanBinding(prefix = "user", type = User.class)
-    static class Config {
+    @Bean
+    public ConfigurationBeanCustomizer customizer() {
+        return new ConfigurationBeanCustomizer() {
 
-        @Bean
-        public ConfigurationBeanCustomizer customizer() {
-            return new ConfigurationBeanCustomizer() {
-
-                @Override
-                public int getOrder() {
-                    return 0;
-                }
-
-                @Override
-                public void customize(String beanName, Object configurationBean) {
-                    if ("m".equals(beanName) && configurationBean instanceof User) {
-                        User user = (User) configurationBean;
-                        user.setAge(19);
-                    }
-                }
-            };
-        }
-
-        @Bean
-        public ConfigurationBeanBinder configurationBeanBinder() {
-            return new DefaultConfigurationBeanBinder();
-        }
-    }
-
-    @Before
-    public void setUp() {
-        context = new AnnotationConfigApplicationContext();
-        context.setEnvironment(new AbstractEnvironment() {
             @Override
-            protected void customizePropertySources(MutablePropertySources propertySources) {
-                ResourceLoader resourceLoader = new DefaultResourceLoader();
-                ResourcePropertySource propertySource = null;
-                try {
-                    propertySource = new ResourcePropertySource("temp",
-                            resourceLoader.getResource("classpath:/enable-configuration-bean-binding.properties"));
-                } catch (IOException e) {
-                }
-                propertySources.addFirst(propertySource);
+            public int getOrder() {
+                return 0;
             }
-        });
-        context.register(Config.class);
-        context.refresh();
+
+            @Override
+            public void customize(String beanName, Object configurationBean) {
+                if ("m".equals(beanName) && configurationBean instanceof User) {
+                    User user = (User) configurationBean;
+                    user.setAge(19);
+                }
+            }
+        };
     }
 
-    @After
-    public void tearDown() {
-        context.close();
+    @Bean
+    public ConfigurationBeanBinder configurationBeanBinder() {
+        return new DefaultConfigurationBeanBinder();
     }
 
     @Test
