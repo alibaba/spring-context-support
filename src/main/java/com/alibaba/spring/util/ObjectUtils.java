@@ -16,6 +16,8 @@
  */
 package com.alibaba.spring.util;
 
+import java.lang.reflect.Array;
+
 /**
  * Object Utilities
  *
@@ -35,4 +37,14 @@ public abstract class ObjectUtils {
         return values;
     }
 
+    /**
+     * Create a new empty array from the specified component type
+     *
+     * @param componentType the specified component type
+     * @param <T>           the specified component type
+     * @return new empty array
+     */
+    public static <T> T[] emptyArray(Class<T> componentType) {
+        return (T[]) Array.newInstance(componentType, 0);
+    }
 }

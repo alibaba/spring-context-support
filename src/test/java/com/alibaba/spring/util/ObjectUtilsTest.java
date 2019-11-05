@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.alibaba.spring.util.ObjectUtils.of;
+import static junit.framework.TestCase.assertEquals;
 
 /**
  * {@link ObjectUtils} Test
@@ -36,6 +37,12 @@ public class ObjectUtilsTest {
         String[] values = of("Hello,World");
         Assert.assertTrue(Arrays.deepEquals(values, new String[]{"Hello,World"}));
         Assert.assertFalse(Arrays.deepEquals(values, new String[]{"Hello,World   "}));
+    }
+
+    @Test
+    public void testEmptyArray() {
+        String[] array = ObjectUtils.emptyArray(String.class);
+        assertEquals(0, array.length);
     }
 
 }
