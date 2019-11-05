@@ -26,6 +26,7 @@ import static com.alibaba.spring.util.ObjectUtils.of;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.springframework.beans.factory.BeanFactoryUtils.beanNamesForTypeIncludingAncestors;
+import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.ObjectUtils.containsElement;
 import static org.springframework.util.ObjectUtils.isEmpty;
 import static org.springframework.util.StringUtils.hasText;
