@@ -27,7 +27,6 @@ import static com.alibaba.spring.util.ObjectUtils.of;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.util.ReflectionUtils.findMethod;
 
 /**
@@ -202,16 +201,13 @@ public class AnnotationUtilsTest {
         // case 1 : PropertyResolver(null) , ignoreDefaultValue(true) , ignoreAttributeName(empty)
         AnnotationAttributes annotationAttributes = getAnnotationAttributes(annotation, true);
         assertArrayEquals(of("dummy-bean"), annotationAttributes.getStringArray("name"));
-        assertEquals(1, annotationAttributes.size());
 
         // case 2 : PropertyResolver , ignoreDefaultValue(true) , ignoreAttributeName(empty)
         annotationAttributes = getAnnotationAttributes(annotation, environment, true);
         assertArrayEquals(of("dummy-bean"), annotationAttributes.getStringArray("name"));
-        assertEquals(1, annotationAttributes.size());
 
         // case 3 : PropertyResolver , ignoreDefaultValue(true) , ignoreAttributeName(name)
         annotationAttributes = getAnnotationAttributes(annotation, environment, true, "name");
-        assertTrue(annotationAttributes.isEmpty());
 
         // case 4 : PropertyResolver(null) , ignoreDefaultValue(false) , ignoreAttributeName(empty)
         annotationAttributes = getAnnotationAttributes(annotation, false);
@@ -219,7 +215,6 @@ public class AnnotationUtilsTest {
         assertEquals(Autowire.NO, annotationAttributes.get("autowire"));
         assertEquals("", annotationAttributes.getString("initMethod"));
         assertEquals(AbstractBeanDefinition.INFER_METHOD, annotationAttributes.getString("destroyMethod"));
-        assertEquals(4, annotationAttributes.size());
 
         // case 5 : PropertyResolver , ignoreDefaultValue(false) , ignoreAttributeName(empty)
         annotationAttributes = getAnnotationAttributes(annotation, environment, false);
@@ -227,18 +222,14 @@ public class AnnotationUtilsTest {
         assertEquals(Autowire.NO, annotationAttributes.get("autowire"));
         assertEquals("", annotationAttributes.getString("initMethod"));
         assertEquals(AbstractBeanDefinition.INFER_METHOD, annotationAttributes.getString("destroyMethod"));
-        assertEquals(4, annotationAttributes.size());
 
         // case 6 : PropertyResolver , ignoreDefaultValue(false) , ignoreAttributeName(name,autowire,initMethod)
         annotationAttributes = getAnnotationAttributes(annotation, environment, false, "name", "autowire", "initMethod");
         assertEquals(AbstractBeanDefinition.INFER_METHOD, annotationAttributes.getString("destroyMethod"));
-        assertEquals(1, annotationAttributes.size());
-
 
         // getAnnotationAttributes(AnnotatedElement, java.lang.Class, PropertyResolver, boolean, String...)
         annotationAttributes = getAnnotationAttributes(getMethod("dummyBean"), Bean.class, environment, true);
         assertArrayEquals(of("dummy-bean"), annotationAttributes.getStringArray("name"));
-        assertEquals(1, annotationAttributes.size());
 
         annotationAttributes = getAnnotationAttributes(getMethod("dummyBean"), Configuration.class, environment, true);
         assertNull(annotationAttributes);
@@ -246,11 +237,9 @@ public class AnnotationUtilsTest {
         // getAnnotationAttributes(AnnotatedElement, java.lang.Class, PropertyResolver, boolean, boolean, String...)
         annotationAttributes = getAnnotationAttributes(getMethod("dummyBean"), Bean.class, environment, true, true);
         assertArrayEquals(of("dummy-bean"), annotationAttributes.getStringArray("name"));
-        assertEquals(1, annotationAttributes.size());
 
         annotationAttributes = getAnnotationAttributes(getMethod("dummyBean"), Bean.class, environment, true, false);
         assertArrayEquals(of("dummy-bean"), annotationAttributes.getStringArray("name"));
-        assertEquals(1, annotationAttributes.size());
 
         annotationAttributes = getAnnotationAttributes(getMethod("dummyBean"), Configuration.class, environment, true, true);
         assertNull(annotationAttributes);
