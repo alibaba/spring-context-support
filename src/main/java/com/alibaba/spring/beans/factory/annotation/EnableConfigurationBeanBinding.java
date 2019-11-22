@@ -65,6 +65,8 @@ public @interface EnableConfigurationBeanBinding {
      * parameters that do not have corresponding fields in the target object.
      * <p>Default is "true". Turn this off to enforce that all bind parameters
      * must have a matching field in the target object.
+     *
+     * @return the default value is <code>true</code>
      */
     boolean ignoreUnknownFields() default true;
 
@@ -73,6 +75,8 @@ public @interface EnableConfigurationBeanBinding {
      * parameters that have corresponding fields in the target object which are
      * not accessible (for example because of null values in the nested path).
      * <p>Default is "true".
+     *
+     * @return the default value is <code>true</code>
      */
     boolean ignoreInvalidFields() default true;
 }

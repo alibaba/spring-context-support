@@ -14,37 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.spring.util;
+package com.alibaba.spring.beans.factory.annotation;
 
-import java.lang.reflect.Array;
+import org.springframework.context.annotation.Import;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Object Utilities
+ * The annotation composes the multiple {@link EnableConfigurationBeanBinding EnableConfigurationBeanBindings}
  *
- * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
- * @since 1.0.2
+ * @since 1.0.4
  */
-public abstract class ObjectUtils {
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(ConfigurationBeanBindingsRegister.class)
+public @interface EnableConfigurationBeanBindings {
 
     /**
-     * Convert from variable arguments to array
-     *
-     * @param values variable arguments
-     * @param <T>    The class
-     * @return array
+     * @return the array of {@link EnableConfigurationBeanBinding EnableConfigurationBeanBindings}
      */
-    public static <T> T[] of(T... values) {
-        return values;
-    }
-
-    /**
-     * Create a new empty array from the specified component type
-     *
-     * @param componentType the specified component type
-     * @param <T>           the specified component type
-     * @return new empty array
-     */
-    public static <T> T[] emptyArray(Class<T> componentType) {
-        return (T[]) Array.newInstance(componentType, 0);
-    }
+    EnableConfigurationBeanBinding[] value();
 }

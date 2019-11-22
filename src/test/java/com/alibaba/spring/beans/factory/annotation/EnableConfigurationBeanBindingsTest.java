@@ -14,37 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.spring.util;
+package com.alibaba.spring.beans.factory.annotation;
 
-import java.lang.reflect.Array;
+import com.alibaba.spring.util.User;
+import org.junit.Test;
+import org.springframework.context.annotation.Configuration;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Object Utilities
+ * {@link EnableConfigurationBeanBindings} Test cases
  *
- * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
- * @since 1.0.2
+ * @since 1.0.4
  */
-public abstract class ObjectUtils {
+@EnableConfigurationBeanBindings(
+        @EnableConfigurationBeanBinding(prefix = "usr", type = User.class)
+)
+@Configuration
+public class EnableConfigurationBeanBindingsTest extends AbstractEnableConfigurationBeanBindingTest {
 
-    /**
-     * Convert from variable arguments to array
-     *
-     * @param values variable arguments
-     * @param <T>    The class
-     * @return array
-     */
-    public static <T> T[] of(T... values) {
-        return values;
-    }
-
-    /**
-     * Create a new empty array from the specified component type
-     *
-     * @param componentType the specified component type
-     * @param <T>           the specified component type
-     * @return new empty array
-     */
-    public static <T> T[] emptyArray(Class<T> componentType) {
-        return (T[]) Array.newInstance(componentType, 0);
+    @Test
+    public void testUser() {
+        User user = context.getBean("m", User.class);
+        assertEquals("mercyblitz", user.getName());
+        assertEquals(34, user.getAge());
     }
 }

@@ -21,11 +21,13 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.lang.String.valueOf;
+import static java.util.Arrays.asList;
 import static org.springframework.core.annotation.AnnotationAttributes.fromMap;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
 import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
 import static org.springframework.util.ClassUtils.resolveClassName;
 import static org.springframework.util.CollectionUtils.arrayToList;
+import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.ObjectUtils.nullSafeEquals;
 import static org.springframework.util.ReflectionUtils.findMethod;
 import static org.springframework.util.ReflectionUtils.invokeMethod;
@@ -184,21 +186,48 @@ public abstract class AnnotationUtils {
     public static Map<String, Object> getAttributes(Annotation annotation, PropertyResolver propertyResolver,
                                                     boolean ignoreDefaultValue, String... ignoreAttributeNames) {
 
-        Set<String> ignoreAttributeNamesSet = new HashSet<String>(arrayToList(ignoreAttributeNames));
+        Map<String, Object> annotationAttributes = org.springframework.core.annotation.AnnotationUtils.getAnnotationAttributes(annotation);
 
-        Map<String, Object> attributes = org.springframework.core.annotation.AnnotationUtils.getAnnotationAttributes(annotation);
+        String[] actualIgnoreAttributeNames = ignoreAttributeNames;
+
+        if (ignoreDefaultValue && !isEmpty(annotationAttributes)) {
+
+            List<String> attributeNamesToIgnore = new LinkedList<String>(asList(ignoreAttributeNames));
+
+            for (Map.Entry<String, Object> annotationAttribute : annotationAttributes.entrySet()) {
+                String attributeName = annotationAttribute.getKey();
+                Object attributeValue = annotationAttribute.getValue();
+                if (nullSafeEquals(attributeValue, getDefaultValue(annotation, attributeName))) {
+                    attributeNamesToIgnore.add(attributeName);
+                }
+            }
+            // extends the ignored list
+            actualIgnoreAttributeNames = attributeNamesToIgnore.toArray(new String[attributeNamesToIgnore.size()]);
+        }
+
+        return getAttributes(annotationAttributes, propertyResolver, actualIgnoreAttributeNames);
+    }
+
+    /**
+     * Get the {@link Annotation} attributes
+     *
+     * @param annotationAttributes the attributes of specified {@link Annotation}
+     * @param propertyResolver     {@link PropertyResolver} instance, e.g {@link Environment}
+     * @param ignoreAttributeNames the attribute names of annotation should be ignored
+     * @return non-null
+     * @since 1.0.4
+     */
+    public static Map<String, Object> getAttributes(Map<String, Object> annotationAttributes,
+                                                    PropertyResolver propertyResolver, String... ignoreAttributeNames) {
+
+        Set<String> ignoreAttributeNamesSet = new HashSet<String>(arrayToList(ignoreAttributeNames));
 
         Map<String, Object> actualAttributes = new LinkedHashMap<String, Object>();
 
-        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+        for (Map.Entry<String, Object> annotationAttribute : annotationAttributes.entrySet()) {
 
-            String attributeName = entry.getKey();
-            Object attributeValue = entry.getValue();
-
-            // ignore default attribute value
-            if (ignoreDefaultValue && nullSafeEquals(attributeValue, getDefaultValue(annotation, attributeName))) {
-                continue;
-            }
+            String attributeName = annotationAttribute.getKey();
+            Object attributeValue = annotationAttribute.getValue();
 
             // ignore attribute name
             if (ignoreAttributeNamesSet.contains(attributeName)) {
@@ -231,14 +260,42 @@ public abstract class AnnotationUtils {
     /**
      * Get the attribute value
      *
-     * @param attributes {@link AnnotationAttributes the annotation attributes}
-     * @param name       the name of attribute
-     * @param <T>        the type of attribute value
+     * @param annotation    {@link Annotation annotation}
+     * @param attributeName the name of attribute
+     * @param <T>           the type of attribute value
      * @return the attribute value if found
      * @since 1.0.3
      */
-    public static <T> T getAttribute(AnnotationAttributes attributes, String name) {
-        return (T) attributes.get(name);
+    public static <T> T getAttribute(Annotation annotation, String attributeName) {
+        return getAttribute(org.springframework.core.annotation.AnnotationUtils.getAnnotationAttributes(annotation), attributeName);
+    }
+
+    /**
+     * Get the attribute value
+     *
+     * @param attributes    {@link Map the annotation attributes} or {@link AnnotationAttributes}
+     * @param attributeName the name of attribute
+     * @param <T>           the type of attribute value
+     * @return the attribute value if found
+     * @since 1.0.3
+     */
+    public static <T> T getAttribute(Map<String, Object> attributes, String attributeName) {
+        return (T) attributes.get(attributeName);
+    }
+
+    /**
+     * Get the {@link AnnotationAttributes}
+     *
+     * @param annotation           specified {@link Annotation}
+     * @param ignoreDefaultValue   whether ignore default value or not
+     * @param ignoreAttributeNames the attribute names of annotation should be ignored
+     * @return non-null
+     * @see #getAnnotationAttributes(Annotation, PropertyResolver, boolean, String...)
+     * @since 1.0.3
+     */
+    public static AnnotationAttributes getAnnotationAttributes(Annotation annotation, boolean ignoreDefaultValue,
+                                                               String... ignoreAttributeNames) {
+        return getAnnotationAttributes(annotation, null, ignoreDefaultValue, ignoreAttributeNames);
     }
 
     /**

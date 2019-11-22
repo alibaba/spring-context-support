@@ -26,25 +26,26 @@ package com.alibaba.spring.beans.factory.annotation;
 import com.alibaba.spring.context.config.DefaultConfigurationBeanBinder;
 import com.alibaba.spring.util.BeanUtils;
 import com.alibaba.spring.util.User;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePropertySource;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class EnableConfigurationBeanBindingTestForMultipleBinding {
+@EnableConfigurationBeanBinding(prefix = "users", type = User.class, multiple = true, ignoreUnknownFields = false,
+        ignoreInvalidFields = false)
+public class EnableConfigurationBeanBindingTestForMultipleBinding extends AbstractEnableConfigurationBeanBindingTest {
+
+    @Bean
+    public ConfigurationBeanBindingPostProcessor configurationBeanBindingPostProcessor() {
+        ConfigurationBeanBindingPostProcessor processor = new ConfigurationBeanBindingPostProcessor();
+        processor.setConfigurationBeanBinder(new DefaultConfigurationBeanBinder());
+        return processor;
+    }
 
     private User aUser;
 
@@ -56,48 +57,12 @@ public class EnableConfigurationBeanBindingTestForMultipleBinding {
 
     private ConfigurationBeanBindingPostProcessor configurationBeanBindingPostProcessor;
 
-    private AnnotationConfigApplicationContext context;
-
     @Before
-    public void setUp() {
-        context = new AnnotationConfigApplicationContext();
-        context.setEnvironment(new AbstractEnvironment() {
-            @Override
-            protected void customizePropertySources(MutablePropertySources propertySources) {
-                ResourceLoader resourceLoader = new DefaultResourceLoader();
-                ResourcePropertySource propertySource = null;
-                try {
-                    propertySource = new ResourcePropertySource("temp",
-                            resourceLoader.getResource("classpath:/enable-configuration-bean-binding.properties"));
-                } catch (IOException e) {
-                }
-                propertySources.addFirst(propertySource);
-            }
-        });
-        context.register(MultipleConfig.class);
-        context.refresh();
-
+    public void init() {
         aUser = context.getBean("a", User.class);
         bUser = context.getBean("b", User.class);
         users = BeanUtils.getSortedBeans(context, User.class);
         configurationBeanBindingPostProcessor = context.getBean("configurationBeanBindingPostProcessor", ConfigurationBeanBindingPostProcessor.class);
-    }
-
-    @After
-    public void tearDown() {
-        context.close();
-    }
-
-    @EnableConfigurationBeanBinding(prefix = "users", type = User.class, multiple = true, ignoreUnknownFields = false,
-            ignoreInvalidFields = false)
-    static class MultipleConfig {
-
-        @Bean
-        public ConfigurationBeanBindingPostProcessor configurationBeanBindingPostProcessor() {
-            ConfigurationBeanBindingPostProcessor processor = new ConfigurationBeanBindingPostProcessor();
-            processor.setConfigurationBeanBinder(new DefaultConfigurationBeanBinder());
-            return processor;
-        }
     }
 
     @Test
