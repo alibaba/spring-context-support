@@ -20,13 +20,16 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import static com.alibaba.spring.util.ObjectUtils.of;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.springframework.beans.factory.BeanFactoryUtils.beanNamesForTypeIncludingAncestors;
-import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncludingAncestors;
+import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.ObjectUtils.containsElement;
+import static org.springframework.util.ObjectUtils.isEmpty;
+import static org.springframework.util.StringUtils.hasText;
 
 /**
  * {@link BeanFactory} Utilities class
@@ -47,16 +50,15 @@ public abstract class BeanFactoryUtils {
      */
     public static <T> T getOptionalBean(ListableBeanFactory beanFactory, String beanName, Class<T> beanType) {
 
-        String[] allBeanNames = beanNamesForTypeIncludingAncestors(beanFactory, beanType);
-
-        if (!containsElement(allBeanNames, beanName)) {
+        if (!hasText(beanName)) {
             return null;
         }
 
-        Map<String, T> beansOfType = beansOfTypeIncludingAncestors(beanFactory, beanType);
+        String[] beanNames = of(beanName);
 
-        return beansOfType.get(beanName);
+        List<T> beans = getBeans(beanFactory, beanNames, beanType);
 
+        return isEmpty(beans) ? null : beans.get(0);
     }
 
 
@@ -71,6 +73,10 @@ public abstract class BeanFactoryUtils {
      */
     public static <T> List<T> getBeans(ListableBeanFactory beanFactory, String[] beanNames, Class<T> beanType) {
 
+        if (isEmpty(beanNames)) {
+            return emptyList();
+        }
+
         String[] allBeanNames = beanNamesForTypeIncludingAncestors(beanFactory, beanType);
 
         List<T> beans = new ArrayList<T>(beanNames.length);
@@ -81,6 +87,6 @@ public abstract class BeanFactoryUtils {
             }
         }
 
-        return Collections.unmodifiableList(beans);
+        return unmodifiableList(beans);
     }
 }

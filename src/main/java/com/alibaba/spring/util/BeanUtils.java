@@ -376,9 +376,8 @@ public abstract class BeanUtils {
      * @param <T>                The  {@link Class} of Bean
      * @return Bean object if found , or return <code>null</code>.
      * @throws NoUniqueBeanDefinitionException if more than one bean of the given type was found
-     * @see BeanFactoryUtils#beanOfTypeIncludingAncestors(ListableBeanFactory, Class)
+     * @see org.springframework.beans.factory.BeanFactoryUtils#beanOfTypeIncludingAncestors(ListableBeanFactory, Class)
      */
-
     public static <T> T getOptionalBean(ListableBeanFactory beanFactory, Class<T> beanClass,
                                         boolean includingAncestors) throws BeansException {
 

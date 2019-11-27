@@ -25,6 +25,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.alibaba.spring.util.BeanFactoryUtils.getBeans;
+import static com.alibaba.spring.util.BeanFactoryUtils.getOptionalBean;
+import static com.alibaba.spring.util.ObjectUtils.of;
+import static org.junit.Assert.assertEquals;
+
 /**
  * {@link BeanFactoryUtils} Test
  *
@@ -51,11 +56,11 @@ public class BeanFactoryUtilsTest {
 
         applicationContext.refresh();
 
-        BaseTestBean testBean = BeanFactoryUtils.getOptionalBean(applicationContext, "baseTestBean", BaseTestBean.class);
+        BaseTestBean testBean = getOptionalBean(applicationContext, "baseTestBean", BaseTestBean.class);
 
         Assert.assertNotNull(testBean);
 
-        Assert.assertEquals("Hello,World", testBean.getName());
+        assertEquals("Hello,World", testBean.getName());
 
     }
 
@@ -64,7 +69,15 @@ public class BeanFactoryUtilsTest {
 
         applicationContext.refresh();
 
-        BaseTestBean testBean = BeanFactoryUtils.getOptionalBean(applicationContext, "baseTestBean", BaseTestBean.class);
+        BaseTestBean testBean = getOptionalBean(applicationContext, "baseTestBean", BaseTestBean.class);
+
+        Assert.assertNull(testBean);
+
+        testBean = getOptionalBean(applicationContext, "1", BaseTestBean.class);
+
+        Assert.assertNull(testBean);
+
+        testBean = getOptionalBean(applicationContext, null, BaseTestBean.class);
 
         Assert.assertNull(testBean);
     }
@@ -76,12 +89,23 @@ public class BeanFactoryUtilsTest {
 
         applicationContext.refresh();
 
-        List<BaseTestBean> testBeans = BeanFactoryUtils.getBeans(applicationContext, new String[]{"baseTestBean"}, BaseTestBean.class);
+        List<BaseTestBean> testBeans = getBeans(applicationContext, new String[]{"baseTestBean"}, BaseTestBean.class);
 
-        Assert.assertEquals(1, testBeans.size());
+        assertEquals(1, testBeans.size());
 
-        Assert.assertEquals("Hello,World", testBeans.get(0).getName());
+        assertEquals("Hello,World", testBeans.get(0).getName());
 
+        testBeans = getBeans(applicationContext, (String[]) null, BaseTestBean.class);
+
+        assertEquals(0, testBeans.size());
+
+        testBeans = getBeans(applicationContext, of((String) null), BaseTestBean.class);
+
+        assertEquals(0, testBeans.size());
+
+        testBeans = getBeans(applicationContext, of("abc"), BaseTestBean.class);
+
+        assertEquals(0, testBeans.size());
     }
 
     @Test
@@ -89,7 +113,7 @@ public class BeanFactoryUtilsTest {
 
         applicationContext.refresh();
 
-        List<BaseTestBean> testBeans = BeanFactoryUtils.getBeans(applicationContext, new String[]{"baseTestBean"}, BaseTestBean.class);
+        List<BaseTestBean> testBeans = getBeans(applicationContext, new String[]{"baseTestBean"}, BaseTestBean.class);
 
         Assert.assertTrue(testBeans.isEmpty());
 
