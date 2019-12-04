@@ -22,7 +22,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -46,22 +46,11 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
+        AnnotationBeanDefinitionRegistryPostProcessorTest.ServiceAnnotationBeanDefinitionRegistryPostProcessor.class,
         AnnotationBeanDefinitionRegistryPostProcessorTest.class
 })
-
+@Configuration
 public class AnnotationBeanDefinitionRegistryPostProcessorTest {
-
-    @Bean
-    public AnnotationBeanDefinitionRegistryPostProcessor postProcessor() {
-        return new AnnotationBeanDefinitionRegistryPostProcessor(Service.class, MyService.class) {
-            @Override
-            protected void registerSecondaryBeanDefinitions(ExposingClassPathBeanDefinitionScanner scanner,
-                                                            Map<String, AnnotatedBeanDefinition> primaryBeanDefinitions,
-                                                            String[] basePackages) {
-                scanner.registerSingleton("stringBean", "Hello,World");
-            }
-        };
-    }
 
     @Service
     static class MyService {
@@ -73,7 +62,6 @@ public class AnnotationBeanDefinitionRegistryPostProcessorTest {
     @Qualifier("stringBean")
     @Autowired
     private String stringBean;
-
 
     @Test
     public void test() {
@@ -95,6 +83,22 @@ public class AnnotationBeanDefinitionRegistryPostProcessorTest {
     @Retention(RetentionPolicy.RUNTIME)
     @Documented
     @Inherited
-    public @interface Service {
+    @interface Service {
+    }
+
+    static class ServiceAnnotationBeanDefinitionRegistryPostProcessor extends
+            AnnotationBeanDefinitionRegistryPostProcessor {
+
+        public ServiceAnnotationBeanDefinitionRegistryPostProcessor() {
+            super(Service.class, Service.class);
+        }
+
+        @Override
+        protected void registerSecondaryBeanDefinitions(ExposingClassPathBeanDefinitionScanner scanner,
+                                                        Map<String, AnnotatedBeanDefinition> primaryBeanDefinitions,
+                                                        String[] basePackages) {
+            scanner.registerSingleton("stringBean", "Hello,World");
+
+        }
     }
 }

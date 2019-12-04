@@ -17,7 +17,6 @@
 package com.alibaba.spring.context.annotation;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
@@ -37,16 +36,15 @@ import static org.springframework.context.annotation.AnnotationConfigUtils.regis
  *     <li>{@link ClassPathBeanDefinitionScanner#checkCandidate(String, BeanDefinition)}</li>
  * </ul>
  * <p>
- * {@link ExposingClassPathBeanDefinitionScanner} is also a {@link BeanDefinitionRegistry}
- * and {@link SingletonBeanRegistry}
+ * {@link ExposingClassPathBeanDefinitionScanner} also supports the features from {@link #getRegistry() BeanDefinitionRegistry}
+ * and {@link #getSingletonBeanRegistry() SingletonBeanRegistry}
  *
  * @see ClassPathBeanDefinitionScanner
  * @see BeanDefinitionRegistry
  * @see SingletonBeanRegistry
  * @since 1.0.6
  */
-public class ExposingClassPathBeanDefinitionScanner extends ClassPathBeanDefinitionScanner implements
-        BeanDefinitionRegistry, SingletonBeanRegistry {
+public class ExposingClassPathBeanDefinitionScanner extends ClassPathBeanDefinitionScanner {
 
     public ExposingClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters,
                                                   Environment environment, ResourceLoader resourceLoader) {
@@ -73,73 +71,7 @@ public class ExposingClassPathBeanDefinitionScanner extends ClassPathBeanDefinit
         getRegistry().registerBeanDefinition(beanName, beanDefinition);
     }
 
-    public void removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException {
-        getRegistry().removeBeanDefinition(beanName);
-    }
-
-    public BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException {
-        return getRegistry().getBeanDefinition(beanName);
-    }
-
-    public boolean containsBeanDefinition(String beanName) {
-        return getRegistry().containsBeanDefinition(beanName);
-    }
-
-    public String[] getBeanDefinitionNames() {
-        return getRegistry().getBeanDefinitionNames();
-    }
-
-    public int getBeanDefinitionCount() {
-        return getRegistry().getBeanDefinitionCount();
-    }
-
-    public boolean isBeanNameInUse(String beanName) {
-        return getRegistry().isBeanNameInUse(beanName);
-    }
-
-    public void registerAlias(String name, String alias) {
-        getRegistry().registerAlias(name, alias);
-    }
-
-    public void removeAlias(String alias) {
-        getRegistry().removeAlias(alias);
-    }
-
-    public boolean isAlias(String name) {
-        return getRegistry().isAlias(name);
-    }
-
-    public String[] getAliases(String name) {
-        return getRegistry().getAliases(name);
-    }
-
-    @Override
     public void registerSingleton(String beanName, Object singletonObject) {
         getSingletonBeanRegistry().registerSingleton(beanName, singletonObject);
-    }
-
-    @Override
-    public Object getSingleton(String beanName) {
-        return getSingletonBeanRegistry().getSingleton(beanName);
-    }
-
-    @Override
-    public boolean containsSingleton(String beanName) {
-        return getSingletonBeanRegistry().containsSingleton(beanName);
-    }
-
-    @Override
-    public String[] getSingletonNames() {
-        return getSingletonBeanRegistry().getSingletonNames();
-    }
-
-    @Override
-    public int getSingletonCount() {
-        return getSingletonBeanRegistry().getSingletonCount();
-    }
-
-    @Override
-    public Object getSingletonMutex() {
-        return getSingletonBeanRegistry().getSingletonMutex();
     }
 }
