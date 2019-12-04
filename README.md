@@ -23,7 +23,7 @@ Current project that extends `spring-context` is based on Spring Framework 3.2.x
     <dependency>
         <groupId>com.alibaba.spring</groupId>
         <artifactId>spring-context-support</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6-SNAPSHOT</version>
     </dependency>
 
     ......

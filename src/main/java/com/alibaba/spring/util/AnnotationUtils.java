@@ -416,4 +416,6 @@ public abstract class AnnotationUtils {
         Annotation annotation = tryGetMergedAnnotation(annotatedElement, annotationType);
         return annotation == null ? null : getAnnotationAttributes(annotation, propertyResolver, ignoreDefaultValue, ignoreAttributeNames);
     }
+
+
 }
