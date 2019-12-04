@@ -122,7 +122,7 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
     }
 
     @Override
-    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+    public final void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
 
         String[] basePackages = resolveBasePackages(getPackagesToScan());
 
