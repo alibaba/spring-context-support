@@ -21,6 +21,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -30,9 +32,11 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -70,7 +74,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @since 1.0.6
  */
 public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor,
-        EnvironmentAware, ResourceLoaderAware, BeanClassLoaderAware {
+        BeanFactoryAware, EnvironmentAware, ResourceLoaderAware, BeanClassLoaderAware {
 
     protected final Log logger = LogFactory.getLog(getClass());
 
@@ -78,7 +82,9 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
 
     private final Set<String> packagesToScan;
 
-    private Environment environment;
+    private ConfigurableListableBeanFactory beanFactory;
+
+    private ConfigurableEnvironment environment;
 
     private ResourceLoader resourceLoader;
 
@@ -283,14 +289,29 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
         return packagesToScan;
     }
 
-    public Environment getEnvironment() {
+    public ConfigurableListableBeanFactory getBeanFactory() {
+        return beanFactory;
+    }
+
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        Assert.isInstanceOf(ConfigurableListableBeanFactory.class, beanFactory,
+                "The 'beanFactory' argument is not a instance of ConfigurableListableBeanFactory, " +
+                        "is it running in Spring container?");
+        this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
+    }
+
+    public ConfigurableEnvironment getEnvironment() {
         return environment;
     }
 
     @Override
     public void setEnvironment(Environment environment) {
-        this.environment = environment;
+        Assert.isInstanceOf(ConfigurableEnvironment.class, environment,
+                "The 'environment' argument is not a instance of ConfigurableEnvironment, " +
+                        "is it running in Spring container?");
+        this.environment = (ConfigurableEnvironment) environment;
     }
+
 
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
