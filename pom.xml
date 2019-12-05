@@ -137,14 +137,14 @@
         <profile>
             <id>spring-5.1</id>
             <properties>
-                <spring.framework.version>5.1.11.RELEASE</spring.framework.version>
+                <spring.framework.version>5.1.12.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
         <profile>
             <id>spring-5.2</id>
             <properties>
-                <spring.framework.version>5.2.1.RELEASE</spring.framework.version>
+                <spring.framework.version>5.2.2.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
