@@ -47,6 +47,7 @@ import static com.alibaba.spring.util.AnnotationUtils.getRequiredAttribute;
 import static com.alibaba.spring.util.BeanRegistrar.registerInfrastructureBean;
 import static com.alibaba.spring.util.PropertySourcesUtils.getSubProperties;
 import static com.alibaba.spring.util.PropertySourcesUtils.normalizePrefix;
+import static java.lang.Boolean.valueOf;
 import static java.util.Collections.singleton;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
 
@@ -82,11 +83,11 @@ public class ConfigurationBeanBindingRegistrar implements ImportBeanDefinitionRe
 
         Class<?> configClass = getRequiredAttribute(attributes, "type");
 
-        boolean multiple = getAttribute(attributes, "multiple", DEFAULT_MULTIPLE);
+        boolean multiple = getAttribute(attributes, "multiple", valueOf(DEFAULT_MULTIPLE));
 
-        boolean ignoreUnknownFields = getAttribute(attributes, "ignoreUnknownFields", DEFAULT_IGNORE_UNKNOWN_FIELDS);
+        boolean ignoreUnknownFields = getAttribute(attributes, "ignoreUnknownFields", valueOf(DEFAULT_IGNORE_UNKNOWN_FIELDS));
 
-        boolean ignoreInvalidFields = getAttribute(attributes, "ignoreInvalidFields", DEFAULT_IGNORE_INVALID_FIELDS);
+        boolean ignoreInvalidFields = getAttribute(attributes, "ignoreInvalidFields", valueOf(DEFAULT_IGNORE_INVALID_FIELDS));
 
         registerConfigurationBeans(prefix, configClass, multiple, ignoreUnknownFields, ignoreInvalidFields, registry);
     }
