@@ -280,7 +280,55 @@ public abstract class AnnotationUtils {
      * @since 1.0.3
      */
     public static <T> T getAttribute(Map<String, Object> attributes, String attributeName) {
-        return (T) attributes.get(attributeName);
+        return getAttribute(attributes, attributeName, false);
+    }
+
+    /**
+     * Get the attribute value the will
+     *
+     * @param attributes    {@link Map the annotation attributes} or {@link AnnotationAttributes}
+     * @param attributeName the name of attribute
+     * @param required      the required attribute or not
+     * @param <T>           the type of attribute value
+     * @return the attribute value if found
+     * @throws IllegalStateException if attribute value can't be found
+     * @since 1.0.6
+     */
+    public static <T> T getAttribute(Map<String, Object> attributes, String attributeName, boolean required) {
+        T value = getAttribute(attributes, attributeName, null);
+        if (required && value == null) {
+            throw new IllegalStateException("The attribute['" + attributeName + "] is required!");
+        }
+        return value;
+    }
+
+    /**
+     * Get the attribute value with default value
+     *
+     * @param attributes    {@link Map the annotation attributes} or {@link AnnotationAttributes}
+     * @param attributeName the name of attribute
+     * @param defaultValue  the default value of attribute
+     * @param <T>           the type of attribute value
+     * @return the attribute value if found
+     * @since 1.0.6
+     */
+    public static <T> T getAttribute(Map<String, Object> attributes, String attributeName, T defaultValue) {
+        T value = (T) attributes.get(attributeName);
+        return value == null ? defaultValue : value;
+    }
+
+    /**
+     * Get the required attribute value
+     *
+     * @param attributes    {@link Map the annotation attributes} or {@link AnnotationAttributes}
+     * @param attributeName the name of attribute
+     * @param <T>           the type of attribute value
+     * @return the attribute value if found
+     * @throws IllegalStateException if attribute value can't be found
+     * @since 1.0.6
+     */
+    public static <T> T getRequiredAttribute(Map<String, Object> attributes, String attributeName) {
+        return getAttribute(attributes, attributeName, true);
     }
 
     /**

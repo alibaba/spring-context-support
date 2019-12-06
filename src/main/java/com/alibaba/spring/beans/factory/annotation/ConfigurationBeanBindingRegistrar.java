@@ -25,7 +25,6 @@ import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
-import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
@@ -40,12 +39,16 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.alibaba.spring.beans.factory.annotation.ConfigurationBeanBindingPostProcessor.initBeanMetadataAttributes;
+import static com.alibaba.spring.beans.factory.annotation.EnableConfigurationBeanBinding.DEFAULT_IGNORE_INVALID_FIELDS;
+import static com.alibaba.spring.beans.factory.annotation.EnableConfigurationBeanBinding.DEFAULT_IGNORE_UNKNOWN_FIELDS;
+import static com.alibaba.spring.beans.factory.annotation.EnableConfigurationBeanBinding.DEFAULT_MULTIPLE;
+import static com.alibaba.spring.util.AnnotationUtils.getAttribute;
+import static com.alibaba.spring.util.AnnotationUtils.getRequiredAttribute;
 import static com.alibaba.spring.util.BeanRegistrar.registerInfrastructureBean;
 import static com.alibaba.spring.util.PropertySourcesUtils.getSubProperties;
 import static com.alibaba.spring.util.PropertySourcesUtils.normalizePrefix;
 import static java.util.Collections.singleton;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
-import static org.springframework.core.annotation.AnnotationAttributes.fromMap;
 
 /**
  * The {@link ImportBeanDefinitionRegistrar} implementation for {@link EnableConfigurationBeanBinding @EnableConfigurationBinding}
@@ -66,25 +69,28 @@ public class ConfigurationBeanBindingRegistrar implements ImportBeanDefinitionRe
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 
-        AnnotationAttributes attributes = fromMap(metadata.getAnnotationAttributes(ENABLE_CONFIGURATION_BINDING_CLASS_NAME));
+        Map<String, Object> attributes = metadata.getAnnotationAttributes(ENABLE_CONFIGURATION_BINDING_CLASS_NAME);
 
         registerConfigurationBeanDefinitions(attributes, registry);
     }
 
-    protected void registerConfigurationBeanDefinitions(AnnotationAttributes attributes, BeanDefinitionRegistry registry) {
+    public void registerConfigurationBeanDefinitions(Map<String, Object> attributes, BeanDefinitionRegistry registry) {
 
-        String prefix = environment.resolvePlaceholders(attributes.getString("prefix"));
+        String prefix = getRequiredAttribute(attributes, "prefix");
 
-        Class<?> configClass = attributes.getClass("type");
+        prefix = environment.resolvePlaceholders(prefix);
 
-        boolean multiple = attributes.getBoolean("multiple");
+        Class<?> configClass = getRequiredAttribute(attributes, "type");
 
-        boolean ignoreUnknownFields = attributes.getBoolean("ignoreUnknownFields");
+        boolean multiple = getAttribute(attributes, "multiple", DEFAULT_MULTIPLE);
 
-        boolean ignoreInvalidFields = attributes.getBoolean("ignoreInvalidFields");
+        boolean ignoreUnknownFields = getAttribute(attributes, "ignoreUnknownFields", DEFAULT_IGNORE_UNKNOWN_FIELDS);
+
+        boolean ignoreInvalidFields = getAttribute(attributes, "ignoreInvalidFields", DEFAULT_IGNORE_INVALID_FIELDS);
 
         registerConfigurationBeans(prefix, configClass, multiple, ignoreUnknownFields, ignoreInvalidFields, registry);
     }
+
 
     private void registerConfigurationBeans(String prefix, Class<?> configClass, boolean multiple,
                                             boolean ignoreUnknownFields, boolean ignoreInvalidFields,
