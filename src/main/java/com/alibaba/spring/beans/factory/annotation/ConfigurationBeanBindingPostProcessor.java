@@ -40,7 +40,6 @@ import static com.alibaba.spring.util.WrapperUtils.unwrap;
 import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncludingAncestors;
 import static org.springframework.core.annotation.AnnotationAwareOrderComparator.sort;
 import static org.springframework.util.ClassUtils.getUserClass;
-import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
 /**
@@ -64,11 +63,11 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
 
     private final Log log = LogFactory.getLog(getClass());
 
-    private ConfigurableListableBeanFactory beanFactory;
+    private ConfigurableListableBeanFactory beanFactory = null;
 
-    private ConfigurationBeanBinder configurationBeanBinder;
+    private ConfigurationBeanBinder configurationBeanBinder = null;
 
-    private List<ConfigurationBeanCustomizer> configurationBeanCustomizers = Collections.emptyList();
+    private List<ConfigurationBeanCustomizer> configurationBeanCustomizers = null;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -99,15 +98,24 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
         this.configurationBeanBinder = configurationBeanBinder;
     }
 
+    /**
+     * Get the {@link List} of {@link ConfigurationBeanCustomizer ConfigurationBeanCustomizers}
+     *
+     * @return non-null
+     * @since 1.0.6
+     */
     public List<ConfigurationBeanCustomizer> getConfigurationBeanCustomizers() {
-        if (isEmpty(configurationBeanCustomizers)) {
+        if (configurationBeanCustomizers == null) {
             initBindConfigurationBeanCustomizers();
         }
         return configurationBeanCustomizers;
     }
 
-    public void setConfigurationBeanCustomizers(List<ConfigurationBeanCustomizer> configurationBeanCustomizers) {
-        this.configurationBeanCustomizers = configurationBeanCustomizers;
+    public void setConfigurationBeanCustomizers(Collection<ConfigurationBeanCustomizer> configurationBeanCustomizers) {
+        List<ConfigurationBeanCustomizer> customizers =
+                new ArrayList<ConfigurationBeanCustomizer>(configurationBeanCustomizers);
+        sort(customizers);
+        this.configurationBeanCustomizers = Collections.unmodifiableList(customizers);
     }
 
     private BeanDefinition getNullableBeanDefinition(String beanName) {
@@ -141,13 +149,12 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
     }
 
     private void initConfigurationBeanBinder() {
-
         if (configurationBeanBinder == null) {
             try {
                 configurationBeanBinder = beanFactory.getBean(ConfigurationBeanBinder.class);
             } catch (BeansException ignored) {
-                if (log.isDebugEnabled()) {
-                    log.debug("configurationBeanBinder Bean can't be found in ApplicationContext.");
+                if (log.isInfoEnabled()) {
+                    log.info("configurationBeanBinder Bean can't be found in ApplicationContext.");
                 }
                 // Use Default implementation
                 configurationBeanBinder = defaultConfigurationBeanBinder();
@@ -156,23 +163,16 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
     }
 
     private void initBindConfigurationBeanCustomizers() {
-
         Collection<ConfigurationBeanCustomizer> customizers =
                 beansOfTypeIncludingAncestors(beanFactory, ConfigurationBeanCustomizer.class).values();
-
-        this.configurationBeanCustomizers = new ArrayList<ConfigurationBeanCustomizer>(customizers);
-
-        sort(this.configurationBeanCustomizers);
+        setConfigurationBeanCustomizers(customizers);
     }
 
     private void customize(String beanName, Object configurationBean) {
-
         for (ConfigurationBeanCustomizer customizer : getConfigurationBeanCustomizers()) {
             customizer.customize(beanName, configurationBean);
         }
-
     }
-
 
     /**
      * Create {@link ConfigurationBeanBinder} instance.
