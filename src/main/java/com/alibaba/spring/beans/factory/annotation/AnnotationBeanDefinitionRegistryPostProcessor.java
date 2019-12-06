@@ -36,7 +36,6 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -50,6 +49,7 @@ import java.util.Set;
 
 import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.resolveAnnotatedBeanNameGenerator;
 import static com.alibaba.spring.util.AnnotationUtils.tryGetMergedAnnotation;
+import static com.alibaba.spring.util.WrapperUtils.unwrap;
 import static java.util.Arrays.asList;
 import static org.springframework.util.ClassUtils.resolveClassName;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -294,10 +294,7 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
     }
 
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        Assert.isInstanceOf(ConfigurableListableBeanFactory.class, beanFactory,
-                "The 'beanFactory' argument is not a instance of ConfigurableListableBeanFactory, " +
-                        "is it running in Spring container?");
-        this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
+        this.beanFactory = unwrap(beanFactory);
     }
 
     public ConfigurableEnvironment getEnvironment() {
@@ -306,12 +303,8 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
 
     @Override
     public void setEnvironment(Environment environment) {
-        Assert.isInstanceOf(ConfigurableEnvironment.class, environment,
-                "The 'environment' argument is not a instance of ConfigurableEnvironment, " +
-                        "is it running in Spring container?");
-        this.environment = (ConfigurableEnvironment) environment;
+        this.environment = unwrap(environment);
     }
-
 
     public ResourceLoader getResourceLoader() {
         return resourceLoader;
