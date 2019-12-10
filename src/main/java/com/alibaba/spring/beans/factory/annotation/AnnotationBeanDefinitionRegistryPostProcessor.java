@@ -36,6 +36,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -51,6 +52,7 @@ import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.resol
 import static com.alibaba.spring.util.AnnotationUtils.tryGetMergedAnnotation;
 import static com.alibaba.spring.util.WrapperUtils.unwrap;
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 import static org.springframework.util.ClassUtils.resolveClassName;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -78,7 +80,7 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
 
     protected final Log logger = LogFactory.getLog(getClass());
 
-    private final Class<? extends Annotation> annotationType;
+    private final Set<Class<? extends Annotation>> supportedAnnotationTypes;
 
     private final Set<String> packagesToScan;
 
@@ -90,24 +92,31 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
 
     private ClassLoader classLoader;
 
-    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> annotationType,
+    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> primaryAnnotationType,
                                                          Class<?>... basePackageClasses) {
-        this(annotationType, resolveBasePackages(basePackageClasses));
+        this(primaryAnnotationType, resolveBasePackages(basePackageClasses));
     }
 
-    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> annotationType,
+    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> primaryAnnotationType,
                                                          String... packagesToScan) {
-        this(annotationType, asList(packagesToScan));
+        this(primaryAnnotationType, asList(packagesToScan));
     }
 
-    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> annotationType,
+    public AnnotationBeanDefinitionRegistryPostProcessor(Class<? extends Annotation> primaryAnnotationType,
                                                          Iterable<String> packagesToScan) {
-        this.annotationType = annotationType;
+        this.supportedAnnotationTypes = new LinkedHashSet<Class<? extends Annotation>>();
+        addSupportedAnnotationType(primaryAnnotationType);
         this.packagesToScan = new LinkedHashSet<String>();
         Iterator<String> iterator = packagesToScan.iterator();
         while (iterator.hasNext()) {
             this.packagesToScan.add(iterator.next());
         }
+    }
+
+    public void addSupportedAnnotationType(Class<? extends Annotation>... annotationTypes) {
+        Assert.notEmpty(annotationTypes, "The argument of annotation types can't be empty");
+        Assert.noNullElements(annotationTypes, "Any element of annotation types can't be null");
+        this.supportedAnnotationTypes.addAll(asList(annotationTypes));
     }
 
     private static String[] resolveBasePackages(Class<?>... basePackageClasses) {
@@ -149,8 +158,10 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
         BeanNameGenerator beanNameGenerator = resolveAnnotatedBeanNameGenerator(registry);
         // Set the BeanNameGenerator
         scanner.setBeanNameGenerator(beanNameGenerator);
-        // Add the AnnotationTypeFilter for annotationType
-        scanner.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+        // Add the AnnotationTypeFilter for annotationTypes
+        for (Class<? extends Annotation> supportedAnnotationType : getSupportedAnnotationTypes()) {
+            scanner.addIncludeFilter(new AnnotationTypeFilter(supportedAnnotationType));
+        }
         // Register the primary BeanDefinitions
         Map<String, AnnotatedBeanDefinition> primaryBeanDefinitions = registerPrimaryBeanDefinitions(scanner, basePackages);
         // Register the secondary BeanDefinitions
@@ -159,7 +170,7 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
 
     /**
      * Scan and register the primary {@link BeanDefinition BeanDefinitions} that were annotated by
-     * {@link #getAnnotationType() the specified annotation type}, and then return the {@link Map} with bean name plus
+     * {@link #getSupportedAnnotationTypes() the supported annotation types}, and then return the {@link Map} with bean name plus
      * aliases if present and primary {@link AnnotatedBeanDefinition AnnotatedBeanDefinitions}.
      * <p>
      * Current method is allowed to be override by the sub-class to change the registration logic
@@ -233,12 +244,12 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
     private void logPrimaryBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitionHolders, String[] basePackages) {
         if (isEmpty(beanDefinitionHolders)) {
             if (logger.isWarnEnabled()) {
-                logger.warn("No Spring Bean annotated @" + getAnnotationTypeName() + " was found under base packages"
+                logger.warn("No Spring Bean annotation @" + getSupportedAnnotationTypeNames() + " was found under base packages"
                         + asList(basePackages));
             }
         } else {
             if (logger.isInfoEnabled()) {
-                logger.info(beanDefinitionHolders.size() + " annotated @" + getAnnotationTypeName() + " components { " +
+                logger.info(beanDefinitionHolders.size() + " annotations " + getSupportedAnnotationTypeNames() + " components { " +
                         beanDefinitionHolders + " } were scanned under packages" + asList(basePackages));
             }
         }
@@ -277,12 +288,16 @@ public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements B
         this.classLoader = classLoader;
     }
 
-    public Class<? extends Annotation> getAnnotationType() {
-        return annotationType;
+    public Set<Class<? extends Annotation>> getSupportedAnnotationTypes() {
+        return unmodifiableSet(supportedAnnotationTypes);
     }
 
-    protected String getAnnotationTypeName() {
-        return getAnnotationType().getName();
+    protected Set<String> getSupportedAnnotationTypeNames() {
+        Set<String> supportedAnnotationTypeNames = new LinkedHashSet<String>();
+        for (Class<? extends Annotation> supportedAnnotationType : supportedAnnotationTypes) {
+            supportedAnnotationTypeNames.add(supportedAnnotationType.getName());
+        }
+        return unmodifiableSet(supportedAnnotationTypeNames);
     }
 
     public Set<String> getPackagesToScan() {
