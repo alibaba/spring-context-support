@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
  * @see PropertySourcesUtils
  * @since 2017.01.13
  */
+@SuppressWarnings("unchecked")
 public class PropertySourcesUtilsTest {
 
     @Test

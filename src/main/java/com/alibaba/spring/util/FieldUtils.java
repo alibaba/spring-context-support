@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
  * @see ReflectionUtils
  * @since 2017.01.22
  */
+@SuppressWarnings("unchecked")
 public abstract class FieldUtils {
 
 

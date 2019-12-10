@@ -48,6 +48,7 @@ import static org.springframework.util.ObjectUtils.nullSafeEquals;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.3
  */
+@SuppressWarnings("unchecked")
 public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor, BeanFactoryAware {
 
     /**

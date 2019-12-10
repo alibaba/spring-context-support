@@ -71,6 +71,7 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  * @deprecated Please use {@link AbstractAnnotationBeanPostProcessor} as the substitution
  */
 @Deprecated
+@SuppressWarnings("unchecked")
 public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation> extends
         InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
         BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
