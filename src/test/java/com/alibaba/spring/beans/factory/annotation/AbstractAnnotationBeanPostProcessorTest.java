@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
         AnnotationInjectedBeanPostProcessorTest.TestConfiguration.class,
         AbstractAnnotationBeanPostProcessorTest.ReferencedAnnotationInjectedBeanPostProcessor.class
 })
+@SuppressWarnings("deprecation")
 public class AbstractAnnotationBeanPostProcessorTest {
 
     @Autowired

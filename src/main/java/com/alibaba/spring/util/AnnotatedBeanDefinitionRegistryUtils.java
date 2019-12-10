@@ -160,7 +160,8 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
      * thus it maybe a potential problem on bean name generation.
      *
      * @param registry {@link BeanDefinitionRegistry}
-     * @return
+     * @return try to find the {@link BeanNameGenerator} bean named {@link AnnotationConfigUtils#CONFIGURATION_BEAN_NAME_GENERATOR},
+     * if it can't be found, return an instance of {@link AnnotationBeanNameGenerator}
      * @see SingletonBeanRegistry
      * @see AnnotationConfigUtils#CONFIGURATION_BEAN_NAME_GENERATOR
      * @see ConfigurationClassPostProcessor#processConfigBeanDefinitions
@@ -195,9 +196,10 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
     /**
      * Finds a {@link Set} of {@link BeanDefinitionHolder BeanDefinitionHolders}
      *
-     * @param scanner       {@link ClassPathBeanDefinitionScanner}
-     * @param packageToScan pachage to scan
-     * @param registry      {@link BeanDefinitionRegistry}
+     * @param scanner           {@link ClassPathBeanDefinitionScanner}
+     * @param packageToScan     package to scan
+     * @param registry          {@link BeanDefinitionRegistry}
+     * @param beanNameGenerator {@link BeanNameGenerator}
      * @return non-null
      */
     public static Set<BeanDefinitionHolder> findBeanDefinitionHolders(ClassPathBeanDefinitionScanner scanner,

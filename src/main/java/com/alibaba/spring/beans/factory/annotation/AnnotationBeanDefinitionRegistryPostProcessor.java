@@ -62,7 +62,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * <ol>
  *     <li>{@link #registerPrimaryBeanDefinitions(ExposingClassPathBeanDefinitionScanner, String[])} : Scan and register
  *     the primary {@link BeanDefinition BeanDefinitions} that were annotated by
- *     {@link #getAnnotationType() the specified annotation type}, and then return the {@link Map} with bean name plus
+ *     {@link #getSupportedAnnotationTypes() the supported annotation types}, and then return the {@link Map} with bean name plus
  *     aliases if present and primary {@link AnnotatedBeanDefinition AnnotatedBeanDefinitions},
  *     it's allowed to be override
  *     </li>
@@ -75,6 +75,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.6
  */
+@SuppressWarnings("unchecked")
 public abstract class AnnotationBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor,
         BeanFactoryAware, EnvironmentAware, ResourceLoaderAware, BeanClassLoaderAware {
 

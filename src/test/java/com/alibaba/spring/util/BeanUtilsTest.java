@@ -24,6 +24,7 @@ import java.util.Map;
  * @see BeanUtils
  * @since 2017.01.13
  */
+@SuppressWarnings("unchecked")
 public class BeanUtilsTest {
 
 
