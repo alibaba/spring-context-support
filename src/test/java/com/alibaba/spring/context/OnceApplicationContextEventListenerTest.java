@@ -17,13 +17,10 @@
 package com.alibaba.spring.context;
 
 import org.junit.Test;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.beans.factory.config.SingletonBeanRegistry;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationListener;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ApplicationContextEvent;
-import org.springframework.context.support.GenericApplicationContext;
 
 import java.util.EventObject;
 import java.util.LinkedHashMap;
@@ -35,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * {@link OnceApplicationContextEventListener} Test
+ *
  * @see OnceApplicationContextEventListener
  * @since 1.0.6
  */
@@ -44,14 +42,14 @@ public class OnceApplicationContextEventListenerTest {
     public void test() {
 
         for (int levels = 1; levels < 100; levels++) {
-            testOnceApplicationContextEventListener(levels, true, new MyContextEventListener());
-            testOnceApplicationContextEventListener(levels, false, new MyContextEventListener());
+            testOnceApplicationContextEventListener(levels, true);
+            testOnceApplicationContextEventListener(levels, false);
         }
     }
 
-    private void testOnceApplicationContextEventListener(int levels, boolean listenersAsBean, ApplicationListener... listeners) {
+    private void testOnceApplicationContextEventListener(int levels, boolean listenersAsBean) {
 
-        ConfigurableApplicationContext context = createContext(levels, listenersAsBean, listeners);
+        ConfigurableApplicationContext context = createContext(levels, listenersAsBean);
 
         context.start();
 
@@ -61,32 +59,18 @@ public class OnceApplicationContextEventListenerTest {
 
     }
 
-    private ConfigurableApplicationContext createContext(int levels, boolean listenersAsBean, ApplicationListener... listeners) {
+    private ConfigurableApplicationContext createContext(int levels, boolean listenersAsBean) {
 
         if (levels < 1) {
             return null;
         }
 
-        ConfigurableApplicationContext context = new GenericApplicationContext();
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 
-        int size = listeners.length;
-
-        for (int i = 0; i < size; i++) {
-            ApplicationListener listener = listeners[i];
-
-            if (listener instanceof ApplicationContextAware) {
-                ((ApplicationContextAware) listener).setApplicationContext(context);
-            }
-
-            if (listenersAsBean) {
-                AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
-                if (beanFactory instanceof SingletonBeanRegistry) {
-                    SingletonBeanRegistry registry = (SingletonBeanRegistry) beanFactory;
-                    registry.registerSingleton("listener-" + (i + 1), listener);
-                }
-            } else {
-                context.addApplicationListener(listener);
-            }
+        if (listenersAsBean) {
+            context.register(MyContextEventListener.class);
+        } else {
+            context.addApplicationListener(new MyContextEventListener(context));
         }
 
         context.setParent(createContext(levels - 1, listenersAsBean));
@@ -97,6 +81,14 @@ public class OnceApplicationContextEventListenerTest {
     }
 
     static class MyContextEventListener extends OnceApplicationContextEventListener {
+
+        public MyContextEventListener() {
+
+        }
+
+        public MyContextEventListener(ApplicationContext applicationContext) {
+            super(applicationContext);
+        }
 
 
         private Map<EventObject, AtomicInteger> eventsHandledCount = new LinkedHashMap<EventObject, AtomicInteger>();
