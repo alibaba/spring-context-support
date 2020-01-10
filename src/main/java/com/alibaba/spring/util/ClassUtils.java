@@ -28,6 +28,14 @@ import java.lang.reflect.Type;
 @SuppressWarnings("unchecked")
 public class ClassUtils {
 
+    /**
+     * The empty array for {@link Class}
+     *
+     * @since 1.0.6
+     */
+    public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
+
+
     public static <T> Class<T> resolveGenericType(Class<?> declaredClass) {
         ParameterizedType parameterizedType = (ParameterizedType) declaredClass.getGenericSuperclass();
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();

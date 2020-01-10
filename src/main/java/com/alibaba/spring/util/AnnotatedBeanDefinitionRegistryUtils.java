@@ -25,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.alibaba.spring.util.ClassUtils.EMPTY_CLASS_ARRAY;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.springframework.context.annotation.AnnotationConfigUtils.CONFIGURATION_BEAN_NAME_GENERATOR;
@@ -90,8 +91,10 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
             return;
         }
 
+        Set<Class<?>> classesToRegister = new LinkedHashSet<Class<?>>(asList(annotatedClasses));
+
         // Remove all annotated-classes that have been registered
-        Iterator<Class<?>> iterator = new ArrayList<Class<?>>(asList(annotatedClasses)).iterator();
+        Iterator<Class<?>> iterator = classesToRegister.iterator();
 
         while (iterator.hasNext()) {
             Class<?> annotatedClass = iterator.next();
@@ -106,7 +109,7 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
             logger.debug(registry.getClass().getSimpleName() + " will register annotated classes : " + asList(annotatedClasses) + " .");
         }
 
-        reader.register(annotatedClasses);
+        reader.register(classesToRegister.toArray(EMPTY_CLASS_ARRAY));
 
     }
 

@@ -21,13 +21,16 @@ public class AnnotatedBeanDefinitionRegistryUtilsTest {
     @Before
     public void init() {
         registry = new DefaultListableBeanFactory();
+        registry.setAllowBeanDefinitionOverriding(false);
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
     }
 
     @Test
     public void testRegisterBeans() {
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(registry, this.getClass());
+        for(int i=0;i<100;i++) {
+            AnnotatedBeanDefinitionRegistryUtils.registerBeans(registry, this.getClass());
+        }
 
         String[] beanNames = registry.getBeanNamesForType(this.getClass());
 
