@@ -81,23 +81,17 @@ public abstract class AnnotatedBeanDefinitionRegistryUtils {
             return;
         }
 
-        // Remove all annotated-classes that have been registered
-        Iterator<Class<?>> iterator = new ArrayList<Class<?>>(asList(annotatedClasses)).iterator();
-
-        while (iterator.hasNext()) {
-            Class<?> annotatedClass = iterator.next();
-            if (isPresentBean(registry, annotatedClass)) {
-                iterator.remove();
-            }
-        }
-
         AnnotatedBeanDefinitionReader reader = new AnnotatedBeanDefinitionReader(registry);
 
         if (logger.isDebugEnabled()) {
             logger.debug(registry.getClass().getSimpleName() + " will register annotated classes : " + asList(annotatedClasses) + " .");
         }
 
-        reader.register(annotatedClasses);
+        for (Class<?> clazz : annotatedClasses) {
+            if (!isPresentBean(registry, clazz)) {
+                reader.register(clazz);
+            }
+        }
 
     }
 
