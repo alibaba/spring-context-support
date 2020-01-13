@@ -42,6 +42,27 @@ import java.lang.annotation.Target;
 public @interface EnableConfigurationBeanBinding {
 
     /**
+     * The default value for {@link #multiple()}
+     *
+     * @since 1.0.6
+     */
+    boolean DEFAULT_MULTIPLE = false;
+
+    /**
+     * The default value for {@link #ignoreUnknownFields()}
+     *
+     * @since 1.0.6
+     */
+    boolean DEFAULT_IGNORE_UNKNOWN_FIELDS = true;
+
+    /**
+     * The default value for {@link #ignoreInvalidFields()}
+     *
+     * @since 1.0.6
+     */
+    boolean DEFAULT_IGNORE_INVALID_FIELDS = true;
+
+    /**
      * The name prefix of the properties that are valid to bind to the type of configuration.
      *
      * @return the name prefix of the properties to bind
@@ -57,8 +78,9 @@ public @interface EnableConfigurationBeanBinding {
      * It indicates whether {@link #prefix()} binding to multiple Spring Beans.
      *
      * @return the default value is <code>false</code>
+     * @see #DEFAULT_MULTIPLE
      */
-    boolean multiple() default false;
+    boolean multiple() default DEFAULT_MULTIPLE;
 
     /**
      * Set whether to ignore unknown fields, that is, whether to ignore bind
@@ -67,8 +89,9 @@ public @interface EnableConfigurationBeanBinding {
      * must have a matching field in the target object.
      *
      * @return the default value is <code>true</code>
+     * @see #DEFAULT_IGNORE_UNKNOWN_FIELDS
      */
-    boolean ignoreUnknownFields() default true;
+    boolean ignoreUnknownFields() default DEFAULT_IGNORE_UNKNOWN_FIELDS;
 
     /**
      * Set whether to ignore invalid fields, that is, whether to ignore bind
@@ -77,6 +100,7 @@ public @interface EnableConfigurationBeanBinding {
      * <p>Default is "true".
      *
      * @return the default value is <code>true</code>
+     * @see #DEFAULT_IGNORE_INVALID_FIELDS
      */
-    boolean ignoreInvalidFields() default true;
+    boolean ignoreInvalidFields() default DEFAULT_IGNORE_INVALID_FIELDS;
 }

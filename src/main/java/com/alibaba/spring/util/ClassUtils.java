@@ -25,7 +25,16 @@ import java.lang.reflect.Type;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 0.1.1
  */
+@SuppressWarnings("unchecked")
 public class ClassUtils {
+
+    /**
+     * The empty array for {@link Class}
+     *
+     * @since 1.0.6
+     */
+    public static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
+
 
     public static <T> Class<T> resolveGenericType(Class<?> declaredClass) {
         ParameterizedType parameterizedType = (ParameterizedType) declaredClass.getGenericSuperclass();

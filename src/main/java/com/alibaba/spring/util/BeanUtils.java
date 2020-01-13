@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.String.format;
 import static org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors;
 
 /**
@@ -114,6 +115,20 @@ public abstract class BeanUtils {
 
         return isBeanPresent(beanFactory, beanClassName, false);
 
+    }
+
+    /**
+     * Is Bean Present or not by the specified name and class
+     *
+     * @param beanFactory {@link BeanFactory}
+     * @param beanName    The bean name
+     * @param beanClass   The bean class
+     * @return If present , return <code>true</code> , or <code>false</code>
+     * @since 1.0.6
+     */
+    public static boolean isBeanPresent(BeanFactory beanFactory, String beanName, Class<?> beanClass)
+            throws NullPointerException {
+        return beanFactory.containsBean(beanName) && beanFactory.isTypeMatch(beanName, beanClass);
     }
 
 
@@ -423,6 +438,30 @@ public abstract class BeanUtils {
 
         return getOptionalBean(beanFactory, beanClass, false);
 
+    }
+
+    /**
+     * Get the bean via the specified bean name and type if available
+     *
+     * @param beanFactory {@link BeanFactory}
+     * @param beanName    the bean name
+     * @param beanType    the class of bean
+     * @param <T>         the bean type
+     * @return the bean if available, or <code>null</code>
+     * @throws BeansException in case of creation errors
+     * @since 1.0.6
+     */
+    public static <T> T getBeanIfAvailable(BeanFactory beanFactory, String beanName, Class<T> beanType)
+            throws BeansException {
+        if (isBeanPresent(beanFactory, beanName, beanType)) {
+            return beanFactory.getBean(beanName, beanType);
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(format("The bean[name : %s , type : %s] can't be found in Spring BeanFactory",
+                    beanName, beanType.getName()));
+        }
+        return null;
     }
 
 

@@ -17,6 +17,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.registerBeans;
+import static com.alibaba.spring.util.BeanUtils.getBeanIfAvailable;
+import static com.alibaba.spring.util.BeanUtils.isBeanPresent;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.util.ClassUtils.isAssignable;
+
 /**
  * {@link BeanUtils} Test
  *
@@ -24,6 +31,7 @@ import java.util.Map;
  * @see BeanUtils
  * @since 2017.01.13
  */
+@SuppressWarnings("unchecked")
 public class BeanUtilsTest {
 
 
@@ -65,13 +73,13 @@ public class BeanUtilsTest {
 
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(applicationContext, Config.class);
+        registerBeans(applicationContext, Config.class);
 
         applicationContext.refresh();
 
         String[] beanNames = BeanUtils.getBeanNames(applicationContext, String.class);
 
-        Assert.assertTrue(Arrays.asList(beanNames).contains("testString"));
+        assertTrue(Arrays.asList(beanNames).contains("testString"));
 
 
     }
@@ -99,9 +107,9 @@ public class BeanUtilsTest {
 
         beanFactory.setParentBeanFactory(parentBeanFactory);
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(parentBeanFactory, TestBean.class);
+        registerBeans(parentBeanFactory, TestBean.class);
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(beanFactory, TestBean2.class);
+        registerBeans(beanFactory, TestBean2.class);
 
         ListableBeanFactory listableBeanFactory = parentBeanFactory;
 
@@ -185,29 +193,33 @@ public class BeanUtilsTest {
 
         DefaultListableBeanFactory registry = new DefaultListableBeanFactory();
 
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, TestBean.class.getName(), true));
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, TestBean.class.getName()));
+        assertFalse(isBeanPresent(registry, TestBean.class.getName(), true));
+        assertFalse(isBeanPresent(registry, TestBean.class.getName()));
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(registry, TestBean.class, TestBean2.class);
+        registerBeans(registry, TestBean.class, TestBean2.class);
 
 
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean.class.getName(), true));
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean.class.getName()));
+        assertTrue(isBeanPresent(registry, TestBean.class.getName(), true));
+        assertTrue(isBeanPresent(registry, TestBean.class.getName()));
 
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean.class, true));
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean.class));
+        assertTrue(isBeanPresent(registry, TestBean.class, true));
+        assertTrue(isBeanPresent(registry, TestBean.class));
 
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean2.class.getName(), true));
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean2.class.getName()));
+        assertTrue(isBeanPresent(registry, TestBean2.class.getName(), true));
+        assertTrue(isBeanPresent(registry, TestBean2.class.getName()));
 
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean2.class, true));
-        Assert.assertTrue(BeanUtils.isBeanPresent(registry, TestBean2.class));
+        assertTrue(isBeanPresent(registry, TestBean2.class, true));
+        assertTrue(isBeanPresent(registry, TestBean2.class));
 
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, BeanUtils.class.getName(), true));
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, BeanUtils.class.getName()));
+        assertFalse(isBeanPresent(registry, BeanUtils.class.getName(), true));
+        assertFalse(isBeanPresent(registry, BeanUtils.class.getName()));
 
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, BeanUtils.class, true));
-        Assert.assertFalse(BeanUtils.isBeanPresent(registry, BeanUtils.class));
+        assertFalse(isBeanPresent(registry, BeanUtils.class, true));
+        assertFalse(isBeanPresent(registry, BeanUtils.class));
+
+        assertTrue(isBeanPresent(registry, "testBean", TestBean.class));
+        assertTrue(isBeanPresent(registry, "testBean2", TestBean2.class));
+        assertFalse(isBeanPresent(registry, "beanUtils", BeanUtils.class));
 
     }
 
@@ -224,7 +236,7 @@ public class BeanUtilsTest {
 
         Assert.assertNull(testBean);
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(registry, TestBean.class);
+        registerBeans(registry, TestBean.class);
 
         testBean = BeanUtils.getOptionalBean(registry, TestBean.class);
 
@@ -237,7 +249,7 @@ public class BeanUtilsTest {
 
         DefaultListableBeanFactory registry = new DefaultListableBeanFactory();
 
-        AnnotatedBeanDefinitionRegistryUtils.registerBeans(registry, TestBean.class, TestBean2.class);
+        registerBeans(registry, TestBean.class, TestBean2.class);
 
         List<com.alibaba.spring.util.Bean> beans = BeanUtils.getSortedBeans(registry, com.alibaba.spring.util.Bean.class);
 
@@ -250,6 +262,18 @@ public class BeanUtilsTest {
         TestBean2 testBean2 = BeanUtils.getOptionalBean(registry, TestBean2.class);
 
         Assert.assertEquals(testBean2, beans.get(1));
+
+    }
+
+    @Test
+    public void testGetBeanIfAvailable() {
+
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+        registerBeans(beanFactory, TestBean.class, TestBean2.class);
+
+        assertTrue(isAssignable(TestBean.class, getBeanIfAvailable(beanFactory, "testBean", TestBean.class).getClass()));
+        assertTrue(isAssignable(TestBean2.class, getBeanIfAvailable(beanFactory, "testBean2", TestBean2.class).getClass()));
 
     }
 

@@ -47,6 +47,7 @@ import java.lang.annotation.Target;
         AnnotationInjectedBeanPostProcessorTest.TestConfiguration.class,
         AnnotationInjectedBeanPostProcessorTest.ReferencedAnnotationInjectedBeanPostProcessor.class
 })
+@SuppressWarnings("deprecation")
 public class AnnotationInjectedBeanPostProcessorTest {
 
     @Autowired

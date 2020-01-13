@@ -12,7 +12,7 @@
 
     <groupId>com.alibaba.spring</groupId>
     <artifactId>spring-context-support</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
 
     <properties>
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -64,13 +64,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <profiles>
@@ -81,6 +74,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.1.1</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -93,6 +87,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
                         <executions>
                             <execution>
                                 <phase>verify</phase>
@@ -144,14 +139,14 @@
         <profile>
             <id>spring-5.1</id>
             <properties>
-                <spring.framework.version>5.1.11.RELEASE</spring.framework.version>
+                <spring.framework.version>5.1.12.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
         <profile>
             <id>spring-5.2</id>
             <properties>
-                <spring.framework.version>5.2.1.RELEASE</spring.framework.version>
+                <spring.framework.version>5.2.2.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
@@ -161,7 +156,18 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <fork>false</fork>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
