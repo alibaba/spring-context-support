@@ -111,7 +111,7 @@ public class ConfigurationBeanBindingRegistrar implements ImportBeanDefinitionRe
                 singleton(resolveSingleBeanName(configurationProperties, configClass, registry));
 
         for (String beanName : beanNames) {
-            registerConfigurationBean(beanName, configClass, multiple, ignoreUnknownFields, ignoreInvalidFields,
+            registerConfigurationBean(beanName.replace("#", "_"), configClass, multiple, ignoreUnknownFields, ignoreInvalidFields,
                     configurationProperties, registry);
         }
 
