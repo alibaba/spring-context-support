@@ -19,11 +19,11 @@ package com.alibaba.spring.util;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 
 import static com.alibaba.spring.util.BeanRegistrar.hasAlias;
 import static com.alibaba.spring.util.BeanRegistrar.registerInfrastructureBean;
+import static com.alibaba.spring.util.BeanRegistrar.registerSpringFactoriesBeans;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -38,7 +38,7 @@ public class BeanRegistrarTest {
 
     private static final String BEAN_NAME = "testBean";
 
-    private BeanDefinitionRegistry registry;
+    private DefaultListableBeanFactory registry;
 
     @Before
     public void init() {
@@ -65,4 +65,14 @@ public class BeanRegistrarTest {
         registry.registerAlias(BEAN_NAME, "A");
         assertTrue(hasAlias(registry, BEAN_NAME, "A"));
     }
+
+    @Test
+    public void testRegisterSpringFactoriesBeans() {
+        assertEquals(2, registerSpringFactoriesBeans(registry, Bean.class));
+        assertTrue(registry.containsBeanDefinition("testBean"));
+        assertTrue(registry.containsBeanDefinition("testBean2"));
+        assertEquals(TestBean.class,registry.getBean("testBean").getClass());
+        assertEquals(TestBean2.class,registry.getBean("testBean2").getClass());
+    }
+
 }
