@@ -77,7 +77,8 @@ public abstract class BeanFactoryUtils {
             return emptyList();
         }
 
-        String[] allBeanNames = beanNamesForTypeIncludingAncestors(beanFactory, beanType);
+        // Issue : https://github.com/alibaba/spring-context-support/issues/20
+        String[] allBeanNames = beanNamesForTypeIncludingAncestors(beanFactory, beanType, true, false);
 
         List<T> beans = new ArrayList<T>(beanNames.length);
 

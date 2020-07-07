@@ -7,27 +7,20 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static java.lang.String.format;
+import static org.springframework.beans.factory.BeanFactoryUtils.beanNamesForTypeIncludingAncestors;
 import static org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors;
 
 /**
@@ -131,53 +124,6 @@ public abstract class BeanUtils {
         return beanFactory.containsBean(beanName) && beanFactory.isTypeMatch(beanName, beanClass);
     }
 
-
-    /**
-     * Get Bean Names from {@link ConfigurableListableBeanFactory} by type.
-     *
-     * @param beanFactory {@link ConfigurableListableBeanFactory}
-     * @param beanClass   The  {@link Class} of Bean
-     * @return If found , return the array of Bean Names , or empty array.
-     */
-    public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass) {
-        return getBeanNames(beanFactory, beanClass, false);
-    }
-
-    /**
-     * Get Bean Names from {@link ConfigurableListableBeanFactory} by type.
-     *
-     * @param beanFactory        {@link ConfigurableListableBeanFactory}
-     * @param beanClass          The  {@link Class} of Bean
-     * @param includingAncestors including ancestors or not
-     * @return If found , return the array of Bean Names , or empty array.
-     */
-    public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass,
-                                        boolean includingAncestors) {
-
-        Set<String> beanNames = new LinkedHashSet<String>();
-
-        beanNames.addAll(doGetBeanNames(beanFactory, beanClass));
-
-        if (includingAncestors) {
-
-            BeanFactory parentBeanFactory = beanFactory.getParentBeanFactory();
-
-            if (parentBeanFactory instanceof ConfigurableListableBeanFactory) {
-
-                ConfigurableListableBeanFactory configurableListableBeanFactory =
-                        (ConfigurableListableBeanFactory) parentBeanFactory;
-
-                String[] parentBeanNames = getBeanNames(configurableListableBeanFactory, beanClass, includingAncestors);
-
-                beanNames.addAll(Arrays.asList(parentBeanNames));
-
-            }
-
-        }
-
-        return StringUtils.toStringArray(beanNames);
-    }
-
     /**
      * Get Bean Names from {@link ListableBeanFactory} by type.
      *
@@ -199,154 +145,14 @@ public abstract class BeanUtils {
      */
     public static String[] getBeanNames(ListableBeanFactory beanFactory, Class<?> beanClass,
                                         boolean includingAncestors) {
-
-        final BeanFactory actualBeanFactory;
-
-        if (beanFactory instanceof ConfigurableApplicationContext) {
-
-            ConfigurableApplicationContext applicationContext = ConfigurableApplicationContext.class.cast(beanFactory);
-
-            actualBeanFactory = applicationContext.getBeanFactory();
-
+        // Issue : https://github.com/alibaba/spring-context-support/issues/22
+        if (includingAncestors) {
+            return beanNamesForTypeIncludingAncestors(beanFactory, beanClass, true, false);
         } else {
-
-            actualBeanFactory = beanFactory;
-
+            return beanFactory.getBeanNamesForType(beanClass, true, false);
         }
-
-
-        if (actualBeanFactory instanceof ConfigurableListableBeanFactory) {
-
-            return getBeanNames((ConfigurableListableBeanFactory) actualBeanFactory, beanClass, includingAncestors);
-
-        }
-
-        return EMPTY_BEAN_NAMES;
-
     }
 
-    private static Class<?> getFactoryBeanType(ConfigurableListableBeanFactory beanFactory,
-                                               BeanDefinition factoryBeanDefinition) {
-
-        BeanDefinition actualFactoryBeanDefinition = factoryBeanDefinition;
-
-        final List<Class<?>> beanClasses = new ArrayList<Class<?>>(1);
-
-        ClassLoader classLoader = beanFactory.getBeanClassLoader();
-
-        String factoryBeanClassName = actualFactoryBeanDefinition.getBeanClassName();
-
-        if (StringUtils.isEmpty(factoryBeanClassName)) {
-
-            String factoryBeanName = factoryBeanDefinition.getFactoryBeanName();
-
-            actualFactoryBeanDefinition = beanFactory.getBeanDefinition(factoryBeanName);
-
-            factoryBeanClassName = actualFactoryBeanDefinition.getBeanClassName();
-
-        }
-
-        if (StringUtils.hasText(factoryBeanClassName)) {
-
-            Class<?> factoryBeanClass = resolveBeanType(factoryBeanClassName, classLoader);
-
-            final String factoryMethodName = factoryBeanDefinition.getFactoryMethodName();
-
-            // @Configuration only allow one method FactoryBean
-            ReflectionUtils.doWithMethods(factoryBeanClass, new ReflectionUtils.MethodCallback() {
-
-                @Override
-                public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
-
-                    beanClasses.add(method.getReturnType());
-
-                }
-            }, new ReflectionUtils.MethodFilter() {
-
-                @Override
-                public boolean matches(Method method) {
-                    return factoryMethodName.equals(method.getName());
-                }
-            });
-
-        }
-
-        return beanClasses.isEmpty() ? null : beanClasses.get(0);
-
-    }
-
-
-    private static Class<?> resolveBeanType(ConfigurableListableBeanFactory beanFactory, BeanDefinition beanDefinition) {
-
-        String factoryBeanName = beanDefinition.getFactoryBeanName();
-
-        ClassLoader classLoader = beanFactory.getBeanClassLoader();
-
-        Class<?> beanType = null;
-
-        if (StringUtils.hasText(factoryBeanName)) {
-
-            beanType = getFactoryBeanType(beanFactory, beanDefinition);
-
-        }
-
-        if (beanType == null) {
-
-            String beanClassName = beanDefinition.getBeanClassName();
-
-            if (StringUtils.hasText(beanClassName)) {
-
-                beanType = resolveBeanType(beanClassName, classLoader);
-
-            }
-
-        }
-
-        if (beanType == null) {
-
-            if (logger.isErrorEnabled()) {
-
-                String message = beanDefinition + " can't be resolved bean type!";
-
-                logger.error(message);
-            }
-
-        }
-
-        return beanType;
-
-    }
-
-    /**
-     * Get Bean names from {@link ConfigurableListableBeanFactory} by type
-     *
-     * @param beanFactory {@link ConfigurableListableBeanFactory}
-     * @param beanType    The  {@link Class type} of Bean
-     * @return the array of bean names.
-     */
-    protected static Set<String> doGetBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanType) {
-
-        String[] allBeanNames = beanFactory.getBeanDefinitionNames();
-
-        Set<String> beanNames = new LinkedHashSet<String>();
-
-        for (String beanName : allBeanNames) {
-
-            BeanDefinition beanDefinition = beanFactory.getBeanDefinition(beanName);
-
-            Class<?> beanClass = resolveBeanType(beanFactory, beanDefinition);
-
-            if (beanClass != null && ClassUtils.isAssignable(beanType, beanClass)) {
-
-                beanNames.add(beanName);
-
-            }
-
-        }
-
-        return Collections.unmodifiableSet(beanNames);
-
-    }
 
     /**
      * Resolve Bean Type
@@ -380,7 +186,6 @@ public abstract class BeanUtils {
         return beanType;
 
     }
-
 
     /**
      * Get Optional Bean by {@link Class} including ancestors(BeanFactory).

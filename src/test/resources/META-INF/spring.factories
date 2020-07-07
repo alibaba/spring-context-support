@@ -1,0 +1,3 @@
+com.alibaba.spring.util.Bean=\
+com.alibaba.spring.util.TestBean,\
+com.alibaba.spring.util.TestBean2
