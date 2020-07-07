@@ -7,6 +7,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.Environment;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.registerBeans;
 import static com.alibaba.spring.util.BeanUtils.getBeanIfAvailable;
+import static com.alibaba.spring.util.BeanUtils.getBeanNames;
 import static com.alibaba.spring.util.BeanUtils.isBeanPresent;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -77,26 +79,25 @@ public class BeanUtilsTest {
 
         applicationContext.refresh();
 
-        String[] beanNames = BeanUtils.getBeanNames(applicationContext, String.class);
+        String[] beanNames = getBeanNames(applicationContext, String.class);
 
         assertTrue(Arrays.asList(beanNames).contains("testString"));
 
 
     }
 
-//    @Test
-//    public void testGetBeanNamesOnXmlBean() {
-//
-//        ClassPathXmlApplicationContext context =
-//                new ClassPathXmlApplicationContext(new String[]{"spring-context.xml"}, false);
-//
-//        context.refresh();
-//
-//        String[] beanNames = BeanUtils.getBeanNames(context, User.class);
-//
-//        Assert.assertTrue(Arrays.asList(beanNames).contains("user"));
-//
-//    }
+    @Test
+    public void testGetBeanNamesOnXmlBean() {
+
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(new String[]{"spring-context.xml"});
+
+        String[] beanNames = getBeanNames(context, User.class);
+
+        Assert.assertTrue(Arrays.asList(beanNames).contains("user"));
+
+        context.close();
+
+    }
 
     @Test
     public void testGetBeanNames() {
@@ -113,7 +114,7 @@ public class BeanUtilsTest {
 
         ListableBeanFactory listableBeanFactory = parentBeanFactory;
 
-        String[] beanNames = BeanUtils.getBeanNames(listableBeanFactory, TestBean.class);
+        String[] beanNames = getBeanNames(listableBeanFactory, TestBean.class);
 
         Assert.assertEquals(1, beanNames.length);
 
@@ -121,7 +122,7 @@ public class BeanUtilsTest {
 
         Assert.assertEquals("testBean", beanName);
 
-        beanNames = BeanUtils.getBeanNames(listableBeanFactory, TestBean.class, true);
+        beanNames = getBeanNames(listableBeanFactory, TestBean.class, true);
 
         Assert.assertEquals(1, beanNames.length);
 
@@ -131,11 +132,11 @@ public class BeanUtilsTest {
 
         listableBeanFactory = beanFactory;
 
-        beanNames = BeanUtils.getBeanNames(listableBeanFactory, TestBean.class);
+        beanNames = getBeanNames(listableBeanFactory, TestBean.class);
 
         Assert.assertEquals(0, beanNames.length);
 
-        beanNames = BeanUtils.getBeanNames(listableBeanFactory, TestBean.class, true);
+        beanNames = getBeanNames(listableBeanFactory, TestBean.class, true);
 
         Assert.assertEquals(1, beanNames.length);
 
@@ -143,7 +144,7 @@ public class BeanUtilsTest {
 
         Assert.assertEquals("testBean", beanName);
 
-        beanNames = BeanUtils.getBeanNames(listableBeanFactory, TestBean2.class, true);
+        beanNames = getBeanNames(listableBeanFactory, TestBean2.class, true);
 
         Assert.assertEquals(1, beanNames.length);
 
@@ -151,7 +152,7 @@ public class BeanUtilsTest {
 
         Assert.assertEquals("testBean2", beanName);
 
-        beanNames = BeanUtils.getBeanNames(listableBeanFactory, com.alibaba.spring.util.Bean.class, true);
+        beanNames = getBeanNames(listableBeanFactory, com.alibaba.spring.util.Bean.class, true);
 
         Assert.assertEquals(2, beanNames.length);
 
@@ -164,7 +165,7 @@ public class BeanUtilsTest {
         Assert.assertEquals("testBean", beanName);
 
 
-        beanNames = BeanUtils.getBeanNames(beanFactory, com.alibaba.spring.util.Bean.class, true);
+        beanNames = getBeanNames(beanFactory, com.alibaba.spring.util.Bean.class, true);
 
         Assert.assertEquals(2, beanNames.length);
 
@@ -176,7 +177,7 @@ public class BeanUtilsTest {
 
         Assert.assertEquals("testBean", beanName);
 
-        beanNames = BeanUtils.getBeanNames(beanFactory, com.alibaba.spring.util.Bean.class);
+        beanNames = getBeanNames(beanFactory, com.alibaba.spring.util.Bean.class);
 
         Assert.assertEquals(1, beanNames.length);
 
