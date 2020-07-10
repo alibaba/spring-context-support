@@ -28,6 +28,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.core.Ordered;
+import org.springframework.core.PriorityOrdered;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +51,7 @@ import static org.springframework.util.ObjectUtils.nullSafeEquals;
  * @since 1.0.3
  */
 @SuppressWarnings("unchecked")
-public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor, BeanFactoryAware {
+public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor, BeanFactoryAware, PriorityOrdered {
 
     /**
      * The bean name of {@link ConfigurationBeanBindingPostProcessor}
@@ -211,5 +213,10 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = unwrap(beanFactory);
+    }
+
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
     }
 }
