@@ -12,7 +12,7 @@
 
     <groupId>com.alibaba.spring</groupId>
     <artifactId>spring-context-support</artifactId>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>1.0.8</version>
 
     <properties>
         <maven.compiler.source>1.6</maven.compiler.source>
