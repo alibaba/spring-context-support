@@ -28,7 +28,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 
 import java.util.ArrayList;
@@ -72,6 +71,8 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
 
     private List<ConfigurationBeanCustomizer> configurationBeanCustomizers = null;
 
+    private int order = LOWEST_PRECEDENCE;
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
 
@@ -88,6 +89,15 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         return bean;
+    }
+
+    /**
+     * Set the order for current instance
+     *
+     * @param order the order
+     */
+    public void setOrder(int order) {
+        this.order = order;
     }
 
     public ConfigurationBeanBinder getConfigurationBeanBinder() {
@@ -217,6 +227,6 @@ public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor,
 
     @Override
     public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+        return order;
     }
 }
