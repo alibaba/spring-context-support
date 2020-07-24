@@ -160,7 +160,7 @@ public abstract class BeanUtils {
      * @param beanFactory {@link ConfigurableListableBeanFactory}
      * @param beanClass   The  {@link Class} of Bean
      * @return If found , return the array of Bean Names , or empty array.
-     * @revert 1.0.9
+     * @revised 1.0.9
      */
     public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass) {
         return getBeanNames(beanFactory, beanClass, false);
@@ -173,7 +173,7 @@ public abstract class BeanUtils {
      * @param beanClass          The  {@link Class} of Bean
      * @param includingAncestors including ancestors or not
      * @return If found , return the array of Bean Names , or empty array.
-     * @revert 1.0.9
+     * @revised 1.0.9
      */
     public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass,
                                         boolean includingAncestors) {
