@@ -7,6 +7,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.ClassUtils;
@@ -151,6 +152,30 @@ public abstract class BeanUtils {
         } else {
             return beanFactory.getBeanNamesForType(beanClass, true, false);
         }
+    }
+
+    /**
+     * Get Bean Names from {@link ListableBeanFactory} by type.
+     *
+     * @param beanFactory {@link ConfigurableListableBeanFactory}
+     * @param beanClass   The  {@link Class} of Bean
+     * @return If found , return the array of Bean Names , or empty array.
+     */
+    public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass) {
+        return getBeanNames(beanFactory, beanClass, false);
+    }
+
+    /**
+     * Get Bean Names from {@link ListableBeanFactory} by type.
+     *
+     * @param beanFactory        {@link ConfigurableListableBeanFactory}
+     * @param beanClass          The  {@link Class} of Bean
+     * @param includingAncestors including ancestors or not
+     * @return If found , return the array of Bean Names , or empty array.
+     */
+    public static String[] getBeanNames(ConfigurableListableBeanFactory beanFactory, Class<?> beanClass,
+                                        boolean includingAncestors) {
+        return getBeanNames((ListableBeanFactory) beanFactory, beanClass, includingAncestors);
     }
 
 
