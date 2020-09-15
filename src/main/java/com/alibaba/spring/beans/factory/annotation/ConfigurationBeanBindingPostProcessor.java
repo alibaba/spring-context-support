@@ -22,11 +22,13 @@ import com.alibaba.spring.context.config.DefaultConfigurationBeanBinder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.core.PriorityOrdered;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.alibaba.spring.beans.factory.annotation.ConfigurationBeanBindingRegistrar.ENABLE_CONFIGURATION_BINDING_CLASS;
+import static com.alibaba.spring.util.WrapperUtils.unwrap;
 import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncludingAncestors;
 import static org.springframework.core.annotation.AnnotationAwareOrderComparator.sort;
 import static org.springframework.util.ClassUtils.getUserClass;
@@ -46,7 +49,8 @@ import static org.springframework.util.ObjectUtils.nullSafeEquals;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.3
  */
-public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostProcessor, BeanPostProcessor {
+@SuppressWarnings("unchecked")
+public class ConfigurationBeanBindingPostProcessor implements BeanPostProcessor, BeanFactoryAware, PriorityOrdered {
 
     /**
      * The bean name of {@link ConfigurationBeanBindingPostProcessor}
@@ -61,21 +65,13 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
 
     private final Log log = LogFactory.getLog(getClass());
 
-    private ConfigurableListableBeanFactory beanFactory;
+    private ConfigurableListableBeanFactory beanFactory = null;
 
-    private ConfigurationBeanBinder configurationBeanBinder;
+    private ConfigurationBeanBinder configurationBeanBinder = null;
 
-    private List<ConfigurationBeanCustomizer> configurationBeanCustomizers = Collections.emptyList();
+    private List<ConfigurationBeanCustomizer> configurationBeanCustomizers = null;
 
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-
-        this.beanFactory = beanFactory;
-
-        initConfigurationBeanBinder();
-
-        initBindConfigurationBeanCustomizers();
-    }
+    private int order = LOWEST_PRECEDENCE;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -95,7 +91,19 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
         return bean;
     }
 
+    /**
+     * Set the order for current instance
+     *
+     * @param order the order
+     */
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
     public ConfigurationBeanBinder getConfigurationBeanBinder() {
+        if (configurationBeanBinder == null) {
+            initConfigurationBeanBinder();
+        }
         return configurationBeanBinder;
     }
 
@@ -103,10 +111,29 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
         this.configurationBeanBinder = configurationBeanBinder;
     }
 
+    /**
+     * Get the {@link List} of {@link ConfigurationBeanCustomizer ConfigurationBeanCustomizers}
+     *
+     * @return non-null
+     * @since 1.0.6
+     */
+    public List<ConfigurationBeanCustomizer> getConfigurationBeanCustomizers() {
+        if (configurationBeanCustomizers == null) {
+            initBindConfigurationBeanCustomizers();
+        }
+        return configurationBeanCustomizers;
+    }
+
+    public void setConfigurationBeanCustomizers(Collection<ConfigurationBeanCustomizer> configurationBeanCustomizers) {
+        List<ConfigurationBeanCustomizer> customizers =
+                new ArrayList<ConfigurationBeanCustomizer>(configurationBeanCustomizers);
+        sort(customizers);
+        this.configurationBeanCustomizers = Collections.unmodifiableList(customizers);
+    }
+
     private BeanDefinition getNullableBeanDefinition(String beanName) {
         return beanFactory.containsBeanDefinition(beanName) ? beanFactory.getBeanDefinition(beanName) : null;
     }
-
 
     private boolean isConfigurationBean(Object bean, BeanDefinition beanDefinition) {
         return beanDefinition != null &&
@@ -126,7 +153,7 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
 
         boolean ignoreInvalidFields = getIgnoreInvalidFields(beanDefinition);
 
-        configurationBeanBinder.bind(configurationProperties, ignoreUnknownFields, ignoreInvalidFields, configurationBean);
+        getConfigurationBeanBinder().bind(configurationProperties, ignoreUnknownFields, ignoreInvalidFields, configurationBean);
 
         if (log.isInfoEnabled()) {
             log.info("The configuration bean [" + configurationBean + "] have been binding by the " +
@@ -135,13 +162,12 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
     }
 
     private void initConfigurationBeanBinder() {
-
         if (configurationBeanBinder == null) {
             try {
                 configurationBeanBinder = beanFactory.getBean(ConfigurationBeanBinder.class);
             } catch (BeansException ignored) {
-                if (log.isDebugEnabled()) {
-                    log.debug("configurationBeanBinder Bean can't be found in ApplicationContext.");
+                if (log.isInfoEnabled()) {
+                    log.info("configurationBeanBinder Bean can't be found in ApplicationContext.");
                 }
                 // Use Default implementation
                 configurationBeanBinder = defaultConfigurationBeanBinder();
@@ -150,21 +176,15 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
     }
 
     private void initBindConfigurationBeanCustomizers() {
-
         Collection<ConfigurationBeanCustomizer> customizers =
                 beansOfTypeIncludingAncestors(beanFactory, ConfigurationBeanCustomizer.class).values();
-
-        this.configurationBeanCustomizers = new ArrayList<ConfigurationBeanCustomizer>(customizers);
-
-        sort(this.configurationBeanCustomizers);
+        setConfigurationBeanCustomizers(customizers);
     }
 
     private void customize(String beanName, Object configurationBean) {
-
-        for (ConfigurationBeanCustomizer customizer : configurationBeanCustomizers) {
+        for (ConfigurationBeanCustomizer customizer : getConfigurationBeanCustomizers()) {
             customizer.customize(beanName, configurationBean);
         }
-
     }
 
     /**
@@ -198,5 +218,15 @@ public class ConfigurationBeanBindingPostProcessor implements BeanFactoryPostPro
 
     private static boolean getIgnoreInvalidFields(BeanDefinition beanDefinition) {
         return getAttribute(beanDefinition, IGNORE_INVALID_FIELDS_ATTRIBUTE_NAME);
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = unwrap(beanFactory);
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
     }
 }

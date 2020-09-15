@@ -14,6 +14,7 @@ import java.lang.reflect.Type;
  * @see BeanPostProcessor
  * @since 2017.01.22
  */
+@SuppressWarnings("unchecked")
 public abstract class GenericBeanPostProcessorAdapter<T> implements BeanPostProcessor {
 
     private final Class<T> beanType;

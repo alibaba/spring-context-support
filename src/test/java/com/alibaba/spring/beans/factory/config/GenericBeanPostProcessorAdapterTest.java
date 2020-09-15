@@ -16,6 +16,7 @@ import static org.junit.Assert.assertNull;
  * @see GenericBeanPostProcessorAdapter
  * @since 2017.01.22
  */
+@SuppressWarnings("unchecked")
 public class GenericBeanPostProcessorAdapterTest {
 
     @Test

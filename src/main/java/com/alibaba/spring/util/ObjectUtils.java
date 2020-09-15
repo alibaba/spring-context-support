@@ -24,6 +24,7 @@ import java.lang.reflect.Array;
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.2
  */
+@SuppressWarnings("unchecked")
 public abstract class ObjectUtils {
 
     /**

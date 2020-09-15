@@ -68,6 +68,7 @@ import static org.springframework.core.BridgeMethodResolver.isVisibilityBridgeMe
  * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
  * @since 1.0.3
  */
+@SuppressWarnings("unchecked")
 public abstract class AbstractAnnotationBeanPostProcessor extends
         InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
         BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {

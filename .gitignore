@@ -69,3 +69,6 @@ hs_err_pid*
 /target/
 
 *.iml
+.idea
+
+target
