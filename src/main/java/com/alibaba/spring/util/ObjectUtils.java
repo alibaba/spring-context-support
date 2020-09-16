@@ -28,6 +28,14 @@ import java.lang.reflect.Array;
 public abstract class ObjectUtils {
 
     /**
+     * Empty String array
+     *
+     * @since 1.0.10
+     */
+    public static final String[] EMPTY_STRING_ARRAY = {};
+
+
+    /**
      * Convert from variable arguments to array
      *
      * @param values variable arguments
