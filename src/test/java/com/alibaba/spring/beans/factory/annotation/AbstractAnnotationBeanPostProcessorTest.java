@@ -16,6 +16,7 @@
  */
 package com.alibaba.spring.beans.factory.annotation;
 
+import com.alibaba.spring.util.User;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
@@ -37,7 +39,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {
         AnnotationInjectedBeanPostProcessorTest.TestConfiguration.class,
-        AbstractAnnotationBeanPostProcessorTest.ReferencedAnnotationInjectedBeanPostProcessor.class
+        AbstractAnnotationBeanPostProcessorTest.ReferencedAnnotationInjectedBeanPostProcessor.class,
+        AbstractAnnotationBeanPostProcessorTest.GenericConfiguration.class,
 })
 @SuppressWarnings({"deprecation", "unchecked"})
 public class AbstractAnnotationBeanPostProcessorTest {
@@ -62,6 +65,9 @@ public class AbstractAnnotationBeanPostProcessorTest {
     @Autowired
     private ConfigurableListableBeanFactory beanFactory;
 
+    @Autowired
+    private GenericConfiguration.GenericChild genericChild;
+
     @Test
     public void testCustomizedAnnotationBeanPostProcessor() {
 
@@ -72,7 +78,7 @@ public class AbstractAnnotationBeanPostProcessorTest {
         Assert.assertEquals(AnnotationInjectedBeanPostProcessorTest.Referenced.class, processor.getAnnotationType());
         Assert.assertEquals(1, processor.getInjectedObjects().size());
         Assert.assertTrue(processor.getInjectedObjects().contains(parent.parentUser));
-        Assert.assertEquals(2, processor.getInjectedFieldObjectsMap().size());
+        Assert.assertEquals(3, processor.getInjectedFieldObjectsMap().size());
         Assert.assertEquals(1, processor.getInjectedMethodObjectsMap().size());
         Assert.assertEquals(Ordered.LOWEST_PRECEDENCE - 3, processor.getOrder());
     }
@@ -84,6 +90,7 @@ public class AbstractAnnotationBeanPostProcessorTest {
         Assert.assertEquals(parent.user, parent.parentUser);
         Assert.assertEquals(parent.user, child.childUser);
         Assert.assertEquals(parent.user, userHolder.user);
+        Assert.assertEquals(parent.user, genericChild.getS());
     }
 
     public static class ReferencedAnnotationInjectedBeanPostProcessor extends AbstractAnnotationBeanPostProcessor {
@@ -103,6 +110,29 @@ public class AbstractAnnotationBeanPostProcessorTest {
                                                      Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) {
             return injectedType.getName();
         }
+    }
+
+    public static class GenericConfiguration {
+
+
+        static abstract class GenericParent<S> {
+
+            @AnnotationInjectedBeanPostProcessorTest.Referenced
+            S s;
+
+            public S getS() {
+                return s;
+            }
+        }
+
+        static class GenericChild extends GenericParent<User> {
+        }
+
+        @Bean
+        public GenericChild genericChild() {
+            return new GenericChild();
+        }
+
     }
 
 }

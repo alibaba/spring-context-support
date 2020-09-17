@@ -18,6 +18,7 @@ package com.alibaba.spring.beans.factory.annotation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
@@ -524,22 +525,18 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         private final AnnotationAttributes attributes;
 
-        private final DependencyDescriptor descriptor;
-
         private volatile Object bean;
 
         protected AnnotatedFieldElement(Field field, AnnotationAttributes attributes) {
             super(field, null);
             this.field = field;
             this.attributes = attributes;
-            this.descriptor = new DependencyDescriptor(field, false);
         }
 
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
-
-            Class<?> injectedType = descriptor.getDependencyType();
-
+            DependencyDescriptor descriptor = createDependencyDescriptor(bean);
+            Class<?> injectedType = descriptor.getResolvableType().resolve();
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
 
             ReflectionUtils.makeAccessible(field);
@@ -548,5 +545,10 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         }
 
+        private DependencyDescriptor createDependencyDescriptor(Object bean) {
+            DependencyDescriptor descriptor = new DependencyDescriptor(field, true);
+            descriptor.setContainingClass(AopUtils.getTargetClass(bean));
+            return descriptor;
+        }
     }
 }
