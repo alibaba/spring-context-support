@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostP
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -523,18 +524,21 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         private final AnnotationAttributes attributes;
 
+        private final DependencyDescriptor descriptor;
+
         private volatile Object bean;
 
         protected AnnotatedFieldElement(Field field, AnnotationAttributes attributes) {
             super(field, null);
             this.field = field;
             this.attributes = attributes;
+            this.descriptor = new DependencyDescriptor(field, false);
         }
 
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
 
-            Class<?> injectedType = field.getType();
+            Class<?> injectedType = descriptor.getDependencyType();
 
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
 
