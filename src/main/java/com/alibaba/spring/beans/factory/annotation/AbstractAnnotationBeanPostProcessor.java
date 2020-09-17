@@ -18,7 +18,6 @@ package com.alibaba.spring.beans.factory.annotation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostP
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -50,6 +48,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,8 +60,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.alibaba.spring.util.AnnotationUtils.getAnnotationAttributes;
+import static org.springframework.aop.support.AopUtils.getTargetClass;
 import static org.springframework.core.BridgeMethodResolver.findBridgedMethod;
 import static org.springframework.core.BridgeMethodResolver.isVisibilityBridgeMethodPair;
+import static org.springframework.core.GenericTypeResolver.resolveTypeArgument;
 
 /**
  * Abstract common {@link BeanPostProcessor} implementation for customized annotation that annotated injected-object.
@@ -535,8 +536,9 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         @Override
         protected void inject(Object bean, String beanName, PropertyValues pvs) throws Throwable {
-            DependencyDescriptor descriptor = createDependencyDescriptor(bean);
-            Class<?> injectedType = descriptor.getResolvableType().resolve();
+
+            Class<?> injectedType = resolveInjectedType(bean, field);
+
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
 
             ReflectionUtils.makeAccessible(field);
@@ -545,10 +547,13 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         }
 
-        private DependencyDescriptor createDependencyDescriptor(Object bean) {
-            DependencyDescriptor descriptor = new DependencyDescriptor(field, true);
-            descriptor.setContainingClass(AopUtils.getTargetClass(bean));
-            return descriptor;
+        private Class<?> resolveInjectedType(Object bean, Field field) {
+            Type genericType = field.getGenericType();
+            if (genericType instanceof Class) { // Just a normal Class
+                return field.getType();
+            } else { // GenericType
+                return resolveTypeArgument(getTargetClass(bean), field.getDeclaringClass());
+            }
         }
     }
 }
