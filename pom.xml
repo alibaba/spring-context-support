@@ -12,7 +12,7 @@
 
     <groupId>com.alibaba.spring</groupId>
     <artifactId>spring-context-support</artifactId>
-    <version>1.0.9</version>
+    <version>1.0.10</version>
 
     <properties>
         <maven.compiler.source>1.6</maven.compiler.source>
@@ -125,28 +125,28 @@
         <profile>
             <id>spring-4.3</id>
             <properties>
-                <spring.framework.version>4.3.28.RELEASE</spring.framework.version>
+                <spring.framework.version>4.3.29.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
         <profile>
             <id>spring-5.0</id>
             <properties>
-                <spring.framework.version>5.0.18.RELEASE</spring.framework.version>
+                <spring.framework.version>5.0.19.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
         <profile>
             <id>spring-5.1</id>
             <properties>
-                <spring.framework.version>5.1.17.RELEASE</spring.framework.version>
+                <spring.framework.version>5.1.18.RELEASE</spring.framework.version>
             </properties>
         </profile>
 
         <profile>
             <id>spring-5.2</id>
             <properties>
-                <spring.framework.version>5.2.8.RELEASE</spring.framework.version>
+                <spring.framework.version>5.2.9.RELEASE</spring.framework.version>
             </properties>
         </profile>
 

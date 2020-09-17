@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.alibaba.spring.util.ObjectUtils.EMPTY_STRING_ARRAY;
 import static java.util.Collections.unmodifiableMap;
 
 /**
@@ -99,23 +100,39 @@ public abstract class PropertySourcesUtils {
 
         while (iterator.hasNext()) {
             PropertySource<?> source = iterator.next();
-            if (source instanceof EnumerablePropertySource) {
-                for (String name : ((EnumerablePropertySource<?>) source).getPropertyNames()) {
-                    if (!subProperties.containsKey(name) && name.startsWith(normalizedPrefix)) {
-                        String subName = name.substring(normalizedPrefix.length());
-                        if (!subProperties.containsKey(subName)) { // take first one
-                            Object value = source.getProperty(name);
-                            if (value instanceof String) {
-                                // Resolve placeholder
-                                value = propertyResolver.resolvePlaceholders((String) value);
-                            }
-                            subProperties.put(subName, value);
+            for (String name : getPropertyNames(source)) {
+                if (!subProperties.containsKey(name) && name.startsWith(normalizedPrefix)) {
+                    String subName = name.substring(normalizedPrefix.length());
+                    if (!subProperties.containsKey(subName)) { // take first one
+                        Object value = source.getProperty(name);
+                        if (value instanceof String) {
+                            // Resolve placeholder
+                            value = propertyResolver.resolvePlaceholders((String) value);
                         }
+                        subProperties.put(subName, value);
                     }
                 }
             }
         }
 
         return unmodifiableMap(subProperties);
+    }
+
+    /**
+     * Get the property names as the array from the specified {@link PropertySource} instance.
+     *
+     * @param propertySource {@link PropertySource} instance
+     * @return non-null
+     * @since 1.0.10
+     */
+    public static String[] getPropertyNames(PropertySource propertySource) {
+        String[] propertyNames = propertySource instanceof EnumerablePropertySource ?
+                ((EnumerablePropertySource) propertySource).getPropertyNames() : null;
+
+        if (propertyNames == null) {
+            propertyNames = EMPTY_STRING_ARRAY;
+        }
+
+        return propertyNames;
     }
 }
