@@ -45,13 +45,13 @@ import org.springframework.util.StringUtils;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.alibaba.spring.util.AnnotationUtils.getAnnotationAttributes;
+import static java.util.Collections.unmodifiableMap;
 import static org.springframework.aop.support.AopUtils.getTargetClass;
 import static org.springframework.core.BridgeMethodResolver.findBridgedMethod;
 import static org.springframework.core.BridgeMethodResolver.isVisibilityBridgeMethodPair;
@@ -97,6 +98,39 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
      * make sure higher priority than {@link AutowiredAnnotationBeanPostProcessor}
      */
     private int order = Ordered.LOWEST_PRECEDENCE - 3;
+
+    /**
+     * whether to turn Class references into Strings (for
+     * compatibility with {@link org.springframework.core.type.AnnotationMetadata} or to
+     * preserve them as Class references
+     *
+     * @since 1.0.11
+     */
+    private boolean classValuesAsString = true;
+
+    /**
+     * whether to turn nested Annotation instances into
+     * {@link AnnotationAttributes} maps (for compatibility with
+     * {@link org.springframework.core.type.AnnotationMetadata} or to preserve them as
+     * Annotation instances
+     *
+     * @since 1.0.11
+     */
+    private boolean nestedAnnotationsAsMap = true;
+
+    /**
+     * whether ignore default value or not
+     *
+     * @since 1.0.11
+     */
+    private boolean ignoreDefaultValue = true;
+
+    /**
+     * whether try merged annotation or not
+     *
+     * @since 1.0.11
+     */
+    private boolean tryMergedAnnotation = true;
 
     /**
      * @param annotationTypes the multiple types of {@link Annotation annotations}
@@ -169,7 +203,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
                 for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
 
-                    AnnotationAttributes attributes = getAnnotationAttributes(field, annotationType, getEnvironment(), true, true);
+                    AnnotationAttributes attributes = doGetAnnotationAttributes(field, annotationType);
 
                     if (attributes != null) {
 
@@ -213,7 +247,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
                 for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
 
-                    AnnotationAttributes attributes = getAnnotationAttributes(bridgedMethod, annotationType, getEnvironment(), true, true);
+                    AnnotationAttributes attributes = doGetAnnotationAttributes(bridgedMethod, annotationType);
 
                     if (attributes != null && method.equals(ClassUtils.getMostSpecificMethod(method, beanClass))) {
                         if (Modifier.isStatic(method.getModifiers())) {
@@ -238,6 +272,19 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
         return elements;
     }
 
+    /**
+     * Get {@link AnnotationAttributes}
+     *
+     * @param annotatedElement {@link AnnotatedElement the annotated element}
+     * @param annotationType   the {@link Class tyoe} pf {@link Annotation annotation}
+     * @return if <code>annotatedElement</code> can't be found in <code>annotatedElement</code>, return <code>null</code>
+     * @since 1.0.11
+     */
+    protected AnnotationAttributes doGetAnnotationAttributes(AnnotatedElement annotatedElement,
+                                                             Class<? extends Annotation> annotationType) {
+        return getAnnotationAttributes(annotatedElement, annotationType, getEnvironment(),
+                classValuesAsString, nestedAnnotationsAsMap, ignoreDefaultValue, tryMergedAnnotation);
+    }
 
     private AbstractAnnotationBeanPostProcessor.AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
         Collection<AbstractAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(beanClass);
@@ -430,7 +477,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         }
 
-        return Collections.unmodifiableMap(injectedElementBeanMap);
+        return unmodifiableMap(injectedElementBeanMap);
 
     }
 
@@ -456,8 +503,45 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         }
 
-        return Collections.unmodifiableMap(injectedElementBeanMap);
+        return unmodifiableMap(injectedElementBeanMap);
 
+    }
+
+    /**
+     * @param classValuesAsString whether to turn Class references into Strings (for
+     *                            compatibility with {@link org.springframework.core.type.AnnotationMetadata} or to
+     *                            preserve them as Class references
+     * @since 1.0.11
+     */
+    public void setClassValuesAsString(boolean classValuesAsString) {
+        this.classValuesAsString = classValuesAsString;
+    }
+
+    /**
+     * @param nestedAnnotationsAsMap whether to turn nested Annotation instances into
+     *                               {@link AnnotationAttributes} maps (for compatibility with
+     *                               {@link org.springframework.core.type.AnnotationMetadata} or to preserve them as
+     *                               Annotation instances
+     * @since 1.0.11
+     */
+    public void setNestedAnnotationsAsMap(boolean nestedAnnotationsAsMap) {
+        this.nestedAnnotationsAsMap = nestedAnnotationsAsMap;
+    }
+
+    /**
+     * @param ignoreDefaultValue whether ignore default value or not
+     * @since 1.0.11
+     */
+    public void setIgnoreDefaultValue(boolean ignoreDefaultValue) {
+        this.ignoreDefaultValue = ignoreDefaultValue;
+    }
+
+    /**
+     * @param tryMergedAnnotation whether try merged annotation or not
+     * @since 1.0.11
+     */
+    public void setTryMergedAnnotation(boolean tryMergedAnnotation) {
+        this.tryMergedAnnotation = tryMergedAnnotation;
     }
 
     /**
