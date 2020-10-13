@@ -213,7 +213,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
                 for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
 
-                    AnnotationAttributes attributes = getAnnotationAttributes(bridgedMethod, annotationType, getEnvironment(), true, true);
+                    AnnotationAttributes attributes = getAnnotationAttributes(bridgedMethod, annotationType, getEnvironment(), true, true, true, true);
 
                     if (attributes != null && method.equals(ClassUtils.getMostSpecificMethod(method, beanClass))) {
                         if (Modifier.isStatic(method.getModifiers())) {
