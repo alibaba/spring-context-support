@@ -433,8 +433,31 @@ public abstract class AnnotationUtils {
                                                                PropertyResolver propertyResolver,
                                                                boolean ignoreDefaultValue,
                                                                String... ignoreAttributeNames) {
+        return getAnnotationAttributes(annotatedElement, annotationType, propertyResolver,
+                false, false, ignoreDefaultValue, ignoreAttributeNames);
+    }
+
+    /**
+     * Get the {@link AnnotationAttributes}
+     *
+     * @param annotatedElement     {@link AnnotatedElement the annotated element}
+     * @param annotationType       the {@link Class tyoe} pf {@link Annotation annotation}
+     * @param propertyResolver     {@link PropertyResolver} instance, e.g {@link Environment}
+     * @param ignoreDefaultValue   whether ignore default value or not
+     * @param ignoreAttributeNames the attribute names of annotation should be ignored
+     * @return if <code>annotatedElement</code> can't be found in <code>annotatedElement</code>, return <code>null</code>
+     * @since 1.0.11
+     */
+    public static AnnotationAttributes getAnnotationAttributes(AnnotatedElement annotatedElement,
+                                                               Class<? extends Annotation> annotationType,
+                                                               PropertyResolver propertyResolver,
+                                                               boolean classValuesAsString,
+                                                               boolean nestedAnnotationsAsMap,
+                                                               boolean ignoreDefaultValue,
+                                                               String... ignoreAttributeNames) {
         Annotation annotation = annotatedElement.getAnnotation(annotationType);
-        return annotation == null ? null : getAnnotationAttributes(annotation, propertyResolver, ignoreDefaultValue, ignoreAttributeNames);
+        return annotation == null ? null : getAnnotationAttributes(annotation, propertyResolver,
+                classValuesAsString, nestedAnnotationsAsMap, ignoreDefaultValue, ignoreAttributeNames);
     }
 
     /**
@@ -503,7 +526,8 @@ public abstract class AnnotationUtils {
         }
 
         if (attributes == null) {
-            attributes = getAnnotationAttributes(annotatedElement, annotationType, propertyResolver, ignoreDefaultValue, ignoreAttributeNames);
+            attributes = getAnnotationAttributes(annotatedElement, annotationType, propertyResolver,
+                    classValuesAsString, nestedAnnotationsAsMap, ignoreDefaultValue, ignoreAttributeNames);
         }
 
         return attributes;
