@@ -459,8 +459,8 @@ public abstract class AnnotationUtils {
                                                                boolean ignoreDefaultValue,
                                                                boolean tryMergedAnnotation,
                                                                String... ignoreAttributeNames) {
-        return getAnnotationAttributes(annotatedElement, annotationType, propertyResolver, ignoreDefaultValue,
-                tryMergedAnnotation, false, false, ignoreAttributeNames);
+        return getAnnotationAttributes(annotatedElement, annotationType, propertyResolver,
+                false, false, ignoreDefaultValue, tryMergedAnnotation, ignoreAttributeNames);
     }
 
     /**
@@ -473,8 +473,6 @@ public abstract class AnnotationUtils {
      * @param annotatedElement       {@link AnnotatedElement the annotated element}
      * @param annotationType         the {@link Class tyoe} pf {@link Annotation annotation}
      * @param propertyResolver       {@link PropertyResolver} instance, e.g {@link Environment}
-     * @param ignoreDefaultValue     whether ignore default value or not
-     * @param tryMergedAnnotation    whether try merged annotation or not
      * @param classValuesAsString    whether to turn Class references into Strings (for
      *                               compatibility with {@link org.springframework.core.type.AnnotationMetadata} or to
      *                               preserve them as Class references
@@ -482,6 +480,8 @@ public abstract class AnnotationUtils {
      *                               {@link AnnotationAttributes} maps (for compatibility with
      *                               {@link org.springframework.core.type.AnnotationMetadata} or to preserve them as
      *                               Annotation instances
+     * @param ignoreDefaultValue     whether ignore default value or not
+     * @param tryMergedAnnotation    whether try merged annotation or not
      * @param ignoreAttributeNames   the attribute names of annotation should be ignored
      * @return if <code>annotatedElement</code> can't be found in <code>annotatedElement</code>, return <code>null</code>
      * @since 1.0.11
@@ -489,10 +489,10 @@ public abstract class AnnotationUtils {
     public static AnnotationAttributes getAnnotationAttributes(AnnotatedElement annotatedElement,
                                                                Class<? extends Annotation> annotationType,
                                                                PropertyResolver propertyResolver,
-                                                               boolean ignoreDefaultValue,
-                                                               boolean tryMergedAnnotation,
                                                                boolean classValuesAsString,
                                                                boolean nestedAnnotationsAsMap,
+                                                               boolean ignoreDefaultValue,
+                                                               boolean tryMergedAnnotation,
                                                                String... ignoreAttributeNames) {
 
         AnnotationAttributes attributes = null;
