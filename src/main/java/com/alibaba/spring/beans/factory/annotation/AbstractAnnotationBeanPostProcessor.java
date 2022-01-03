@@ -106,7 +106,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
      *
      * @since 1.0.11
      */
-    private boolean classValuesAsString = true;
+    private boolean classValuesAsString;
 
     /**
      * whether to turn nested Annotation instances into
@@ -116,7 +116,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
      *
      * @since 1.0.11
      */
-    private boolean nestedAnnotationsAsMap = true;
+    private boolean nestedAnnotationsAsMap;
 
     /**
      * whether ignore default value or not
