@@ -29,7 +29,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
+import org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.EnvironmentAware;
@@ -72,8 +72,8 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotation;
  */
 @Deprecated
 @SuppressWarnings("unchecked")
-public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation> extends
-        InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, PriorityOrdered,
+public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation>
+          implements SmartInstantiationAwareBeanPostProcessor,MergedBeanDefinitionPostProcessor, PriorityOrdered,
         BeanFactoryAware, BeanClassLoaderAware, EnvironmentAware, DisposableBean {
 
     private final static int CACHE_SIZE = Integer.getInteger("", 32);
@@ -121,11 +121,11 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation> 
                 "AnnotationInjectedBeanPostProcessor requires a ConfigurableListableBeanFactory");
         this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
-
+    
     @Override
-    public PropertyValues postProcessPropertyValues(
-            PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
-
+    public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName)
+            throws BeansException {
+    
         InjectionMetadata metadata = findInjectionMetadata(beanName, bean.getClass(), pvs);
         try {
             metadata.inject(bean, beanName, pvs);
@@ -137,8 +137,7 @@ public abstract class AnnotationInjectedBeanPostProcessor<A extends Annotation> 
         }
         return pvs;
     }
-
-
+    
     /**
      * Finds {@link InjectionMetadata.InjectedElement} Metadata from annotated {@link A} fields
      *
