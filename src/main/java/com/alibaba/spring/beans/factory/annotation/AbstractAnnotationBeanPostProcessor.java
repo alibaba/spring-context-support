@@ -623,6 +623,10 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
             Class<?> injectedType = resolveInjectedType(bean, field);
 
+            if (attributes.get("interfaceClass") != null) {
+                this.attributes.put("interfaceClass", injectedType);
+            }
+
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
 
             ReflectionUtils.makeAccessible(field);
